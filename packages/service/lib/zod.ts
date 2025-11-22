@@ -106,6 +106,7 @@ const MCPServerSchema = z.object({
 
 export const AgentDescriptorSchema = z.object({
   id: z.string(),
+  model: z.string(),
   registrationPieceCid: z.string(),
   registration: z.object({
     type: z.literal("https://eips.ethereum.org/EIPS/eip-8004#registration-v1"),
@@ -189,6 +190,7 @@ export const RawChatRowSchema = z.object({
 
 export const RawAgentRowSchema = z.object({
   id: z.number(),
+  model: z.string(),
   registration_piece_cid: z.string(),
   base_system_prompt: z.string(),
   knowledge_bases: z.string(), // JSON string
@@ -198,6 +200,7 @@ export const RawAgentRowSchema = z.object({
 
 export const DBAgentSchema = z.object({
   id: z.string(),
+  model: z.string(),
   registrationPieceCid: z.string(),
   baseSystemPrompt: z.string(),
   knowledgeBases: z.array(KnowledgeBaseSchema),

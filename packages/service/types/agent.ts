@@ -7,6 +7,8 @@ export interface IAgent {
 export type AgentDescriptor = {
   id: string;
 
+  model: string;
+
   registrationPieceCid: string;
   registration: {
     type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1";

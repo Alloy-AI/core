@@ -26,6 +26,7 @@ CREATE INDEX IF NOT EXISTS idx_timestamp ON chat_history (timestamp);
 CREATE TABLE
     IF NOT EXISTS agents (
         id SERIAL PRIMARY KEY,
+        model VARCHAR(255) NOT NULL,
         registration_piece_cid VARCHAR(255) NOT NULL,
         base_system_prompt TEXT NOT NULL,
         knowledge_bases JSONB DEFAULT '[]'::jsonb,

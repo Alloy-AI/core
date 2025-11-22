@@ -1,7 +1,7 @@
 {
   "name": "@alloy/executor",
   "scripts": {
-    "oasis:push": "docker compose build; oasis rofl build; oasis rofl update; oasis rofl deploy"
+    "oasis:push": "docker compose build; oasis rofl update; oasis rofl build; oasis rofl update; oasis rofl deploy"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.71",

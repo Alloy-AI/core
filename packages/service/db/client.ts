@@ -42,6 +42,7 @@ interface ChatHistoryRow {
 
 interface AgentRow {
   id: number;
+  model: string;
   registration_piece_cid: string;
   base_system_prompt: string;
   knowledge_bases: string;
@@ -183,8 +184,8 @@ async function createAgent(args: { agentData: AgentData }) {
   const validatedArgs = CreateAgentSchema.parse(args);
   const { agentData } = validatedArgs;
   const result = await sql`
-        INSERT INTO agents (registration_piece_cid, base_system_prompt, knowledge_bases, tools, mcp_servers)
-        VALUES (${agentData.registrationPieceCid}, ${agentData.baseSystemPrompt}, ${JSON.stringify(agentData.knowledgeBases)}, ${JSON.stringify(agentData.tools)}, ${JSON.stringify(agentData.mcpServers)})
+        INSERT INTO agents (model, registration_piece_cid, base_system_prompt, knowledge_bases, tools, mcp_servers)
+        VALUES (${agentData.model}, ${agentData.registrationPieceCid}, ${agentData.baseSystemPrompt}, ${JSON.stringify(agentData.knowledgeBases)}, ${JSON.stringify(agentData.tools)}, ${JSON.stringify(agentData.mcpServers)})
         RETURNING id
     `;
   return result[0];
@@ -200,6 +201,7 @@ async function getAgent(args: { id: string }) {
   const row = RawAgentRowSchema.parse(result[0]);
   const agent = {
     id: String(row.id),
+    model: row.model,
     registrationPieceCid: row.registration_piece_cid,
     baseSystemPrompt: row.base_system_prompt,
     knowledgeBases: JSON.parse(row.knowledge_bases),
@@ -214,6 +216,10 @@ async function updateAgent(args: { id: string; updates: Partial<AgentData> }) {
   const { id, updates } = validatedArgs;
   const fields = [];
   const values = [];
+  if (updates.model !== undefined) {
+    fields.push("model = ?");
+    values.push(updates.model);
+  }
   if (updates.registrationPieceCid !== undefined) {
     fields.push("registration_piece_cid = ?");
     values.push(updates.registrationPieceCid);
