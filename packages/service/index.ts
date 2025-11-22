@@ -12,7 +12,11 @@ router.post('/agents', async (ctx) => {
     const rawBody = await ctx.req.json();
     const parsedData = z.object({
         name: z.string(),
+        description: z.string(),
+        image: z.string().optional(),
     })
+
+    //register A2A
 
     return ctx.ok({ status: 'ok' });
 })
