@@ -1,0 +1,15 @@
+services:
+  mycontainer:
+    build: .
+    image: "docker.io/marsian83/alloy-agent"
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    volumes:
+      - my-volume:/root/.my-volume # Persistent  storage.
+      - /run/rofl-appd.sock:/run/rofl-appd.sock # appd
+    environment:
+      - MY_SECRET_1=${MY_SECRET_1}
+
+# volumes:
+#   my-volume:
