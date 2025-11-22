@@ -1,4 +1,4 @@
-import Sidebar from "@/src/lib/components/app/Sidebar";
+import Sidebar from "@/src/pages/dashboard/sidebar";
 import ThemeSwitch from "@/src/lib/components/custom/ThemeSwitch";
 import Navbar from "./nav";
 
@@ -8,18 +8,21 @@ export default function Layout({
   children: React.ReactNode
 }) {
   return (
-    <div className="bg-background [--navbar-height:5rem] sm:[--sidebar-width:16rem]">
-      <div className="h-[var(--navbar-height)] border-b-4 border-black">
+    <div className="min-h-screen bg-background [--navbar-height:5rem] sm:[--sidebar-width:16rem]">
+      {/* Navbar Container - Height preserved for layout spacing */}
+      <div className="h-[var(--navbar-height)] relative z-50">
         <Navbar />
       </div>
 
       <Sidebar />
 
-      <div className="ml-[var(--sidebar-width)] h-[calc(100dvh-var(--navbar-height))] @container/main">
-        {children}
+      <div className="ml-0 sm:ml-[var(--sidebar-width)] min-h-[calc(100dvh-var(--navbar-height))] @container/main p-6">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+          {children}
+        </div>
       </div>
 
-      <div className="fixed right-4 bottom-4">
+      <div className="fixed right-4 bottom-4 z-50">
         <ThemeSwitch />
       </div>
     </div>
