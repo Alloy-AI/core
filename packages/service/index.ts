@@ -1,26 +1,24 @@
 import { Hono } from "hono";
-import { db } from "./db/client";
-import { getAgent } from "./lib/a2a";
-import { appd } from "./lib/appd";
-import { respond } from "./lib/Router";
+import { db } from "../db/client";
+import { getAgent } from "../lib/a2a";
+import { appd } from "../lib/appd";
+import { respond } from "../lib/Router";
+import agents from "./routes/agents";
+import chats from "./routes/chats";
 
 const app = new Hono();
+
+// Mount new routes
+app.route("/agents", agents);
+app.route("/chats", chats);
 
 app.get("/app-id", (c) => {
   return respond.ok(c, { appId: appd.getAppId() }, "", 200);
 });
 
-app.post("/agents", (c) => {
-  return respond.ok(c, { status: "ok" }, "", 200);
-});
-
+// Deprecated or Specific Logic to keep in index for now
 app.get("/agents/:id/pk", (c) => {
   return respond.ok(c, { status: "ok" }, "", 200);
-});
-
-app.post("/chats", async (c) => {
-  const chatId = Bun.randomUUIDv7();
-  return respond.ok(c, { chatId }, "Chat registered successfully", 200);
 });
 
 app.put("/base-system-prompt/:id", async (c) => {

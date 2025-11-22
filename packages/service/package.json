@@ -12,6 +12,7 @@
     "axios": "^1.13.2",
     "fast-json-stable-stringify": "^2.1.0",
     "hono": "^4.10.6",
-    "viem": "^2.39.3"
+    "viem": "^2.39.3",
+    "zod": "^4.1.12"
   }
 }

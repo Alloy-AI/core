@@ -17,7 +17,6 @@ import {
   GetChatHistorySchema,
   GetChatSchema,
   GetChatsByWalletSchema,
-  GetChatsOfWalletAddressSchema,
   InsertMessageSchema,
   RawAgentRowSchema,
   RawChatHistoryRowSchema,
@@ -42,7 +41,8 @@ interface ChatHistoryRow {
 
 interface AgentRow {
   id: number;
-  model: string;
+  name: string;
+  description: string;
   registration_piece_cid: string;
   base_system_prompt: string;
   knowledge_bases: string;
@@ -93,20 +93,6 @@ async function getChatHistory(args: { chatId: string }) {
 
 async function getChatsByWallet(args: { walletAddress: string }) {
   const validatedArgs = GetChatsByWalletSchema.parse(args);
-  const { walletAddress } = validatedArgs;
-  const results = await sql`
-        SELECT id FROM chats
-        WHERE wallet_address = ${walletAddress}
-    `;
-
-  return results.map((row: unknown) => {
-    const parsed = z.object({ id: z.string() }).parse(row);
-    return parsed.id;
-  });
-}
-
-async function getChatsOfWalletAddress(args: { walletAddress: string }) {
-  const validatedArgs = GetChatsOfWalletAddressSchema.parse(args);
   const { walletAddress } = validatedArgs;
   const results = await sql`
         SELECT * FROM chats
@@ -184,8 +170,8 @@ async function createAgent(args: { agentData: AgentData }) {
   const validatedArgs = CreateAgentSchema.parse(args);
   const { agentData } = validatedArgs;
   const result = await sql`
-        INSERT INTO agents (model, registration_piece_cid, base_system_prompt, knowledge_bases, tools, mcp_servers)
-        VALUES (${agentData.model}, ${agentData.registrationPieceCid}, ${agentData.baseSystemPrompt}, ${JSON.stringify(agentData.knowledgeBases)}, ${JSON.stringify(agentData.tools)}, ${JSON.stringify(agentData.mcpServers)})
+        INSERT INTO agents (name, description, registration_piece_cid, base_system_prompt, knowledge_bases, tools, mcp_servers)
+        VALUES (${agentData.name}, ${agentData.description}, ${agentData.registrationPieceCid}, ${agentData.baseSystemPrompt}, ${JSON.stringify(agentData.knowledgeBases)}, ${JSON.stringify(agentData.tools)}, ${JSON.stringify(agentData.mcpServers)})
         RETURNING id
     `;
   return result[0];
@@ -216,9 +202,13 @@ async function updateAgent(args: { id: string; updates: Partial<AgentData> }) {
   const { id, updates } = validatedArgs;
   const fields = [];
   const values = [];
-  if (updates.model !== undefined) {
-    fields.push("model = ?");
-    values.push(updates.model);
+  if (updates.name !== undefined) {
+    fields.push("name = ?");
+    values.push(updates.name);
+  }
+  if (updates.description !== undefined) {
+    fields.push("description = ?");
+    values.push(updates.description);
   }
   if (updates.registrationPieceCid !== undefined) {
     fields.push("registration_piece_cid = ?");
@@ -259,6 +249,7 @@ async function getAllAgents(args: {}) {
     const parsedRow = RawAgentRowSchema.parse(row);
     const agent = {
       id: String(parsedRow.id),
+      model: parsedRow.model,
       registrationPieceCid: parsedRow.registration_piece_cid,
       baseSystemPrompt: parsedRow.base_system_prompt,
       knowledgeBases: JSON.parse(parsedRow.knowledge_bases),
@@ -273,7 +264,6 @@ export const db = {
   insertMessage,
   getChatHistory,
   getChatsByWallet,
-  getChatsOfWalletAddress,
   deleteChatHistory,
   deleteChatsByWallet,
   getAllChatIds,

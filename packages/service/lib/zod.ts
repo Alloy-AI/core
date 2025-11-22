@@ -126,6 +126,9 @@ export const AgentDescriptorSchema = z.object({
 export const AgentDataSchema = AgentDescriptorSchema.omit({
   registration: true,
   id: true,
+}).extend({
+  name: z.string(),
+  description: z.string(),
 });
 
 export const CreateAgentSchema = z.object({
