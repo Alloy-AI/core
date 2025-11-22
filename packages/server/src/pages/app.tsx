@@ -19,11 +19,7 @@ const rootRoute = createRootRoute({
   component: () => {
     useAnalytics();
 
-    return (
-      <>
-        <Outlet />
-      </>
-    );
+    return <Outlet />;
   },
 });
 

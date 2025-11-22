@@ -66,9 +66,9 @@ export default function DashboardPage() {
               change: "+150 this month",
               icon: TrendUpIcon,
             },
-          ].map((stat, i) => (
+          ].map((stat) => (
             <Card
-              key={i}
+              key={stat.label}
               className="bg-background/40 backdrop-blur-md border-border"
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -98,9 +98,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentAgents.map((agent, i) => (
+                {recentAgents.map((agent) => (
                   <div
-                    key={i}
+                    key={agent.id}
                     className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors group cursor-pointer"
                   >
                     <div className="flex items-center gap-4">

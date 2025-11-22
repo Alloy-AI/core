@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeftIcon, PuzzlePieceIcon } from "@phosphor-icons/react";
+import { PuzzlePieceIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";

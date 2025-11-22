@@ -1,6 +1,6 @@
 import ThemeSwitch from "@/src/lib/components/custom/ThemeSwitch";
 import Navbar from "./nav";
-import Sidebar from "./Sidebar";
+import Sidebar from "./sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

@@ -1,12 +1,14 @@
-import Groq from "groq-sdk";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateText } from "ai";
 import { db } from "../db/client";
 import type { AgentDescriptor, IAgent } from "../types/agent";
 
 export class Agent implements IAgent {
-  private groqClient: Groq;
+  private groq: ReturnType<typeof createOpenAI>;
 
   constructor() {
-    this.groqClient = new Groq({
+    this.groq = createOpenAI({
+      baseURL: "https://api.groq.com/openai/v1",
       apiKey: process.env.GROQ_API_KEY,
     });
   }
@@ -23,8 +25,10 @@ export class Agent implements IAgent {
       try {
         chatInfo = await this.getChatInformation({ chatId });
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : JSON.stringify(error);
         console.warn(
-          `Chat with ID ${chatId} not found, proceeding without chat context`,
+          `Chat with ID ${chatId} not found, proceeding without chat context: ${errorMessage}`,
         );
       }
     }
@@ -68,14 +72,14 @@ export class Agent implements IAgent {
     // Add the current user message
     messages.push({ role: "user", content: message });
 
-    // Generate response using Groq
-    const response = await this.groqClient.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+    // Generate response using AI SDK
+    const { text } = await generateText({
+      model: this.groq("llama-3.3-70b-versatile"),
       messages: messages,
       temperature: 0.7,
     });
 
-    return response.choices[0]?.message?.content || "";
+    return text;
   }
 
   async getChatInformation(args: { chatId: string }): Promise<AgentDescriptor> {
