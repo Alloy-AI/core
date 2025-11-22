@@ -1,5 +1,7 @@
 import { Button } from "@/src/lib/components/ui/button";
 import { motion, type Variants } from "motion/react";
+import { usePrivy } from "@privy-io/react-auth";
+import { useNavigate, Link } from "@tanstack/react-router";
 
 // Consistent orchestration with Navbar
 const containerVariants: Variants = {
@@ -56,6 +58,17 @@ const itemVariants: Variants = {
 export default function HomePage() {
     const text1 = "Build Intelligent";
     const text2 = "On-Chain Agents";
+    
+    const { login, authenticated } = usePrivy();
+    const navigate = useNavigate();
+
+    const handleStartBuilding = () => {
+        if (authenticated) {
+            navigate({ to: "/dashboard" });
+        } else {
+            login();
+        }
+    };
 
     return (
         <div className="h-full relative overflow-hidden flex items-center justify-center">
@@ -138,7 +151,12 @@ export default function HomePage() {
                         whileHover={{ scale: 1.02 }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                        <Button variant="fusion" size="lg" className="text-lg px-8 py-6 min-w-[160px] shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.6)] transition-all duration-300 border border-primary/50">
+                        <Button 
+                            variant="fusion" 
+                            size="lg" 
+                            className="text-lg px-8 py-6 min-w-[160px] shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.6)] transition-all duration-300 border border-primary/50"
+                            onClick={handleStartBuilding}
+                        >
                             Start Building
                         </Button>
                     </motion.div>
@@ -147,8 +165,15 @@ export default function HomePage() {
                         whileHover={{ scale: 1.02 }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                        <Button variant="outline" size="lg" className="text-lg px-8 py-6 min-w-[160px] border-foreground/10 bg-foreground/5 hover:bg-foreground/10 text-foreground hover:text-foreground backdrop-blur-md">
-                            View Docs
+                        <Button 
+                            variant="outline" 
+                            size="lg" 
+                            className="text-lg px-8 py-6 min-w-[160px] border-foreground/10 bg-foreground/5 hover:bg-foreground/10 text-foreground hover:text-foreground backdrop-blur-md"
+                            asChild
+                        >
+                            <Link to="/docs">
+                                View Docs
+                            </Link>
                         </Button>
                     </motion.div>
                 </motion.div>

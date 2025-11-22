@@ -42,11 +42,11 @@ export default function CreateAgentPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-black p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-2xl space-y-8 relative">
         
         <div className="absolute -top-16 left-0">
-            <Button variant="ghost" asChild className="text-muted-foreground hover:text-white pl-0 gap-2">
+            <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground pl-0 gap-2">
                 <Link to="/dashboard">
                     <ArrowLeftIcon className="size-4" />
                     Back to Dashboard
@@ -55,13 +55,13 @@ export default function CreateAgentPage() {
         </div>
 
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Create New Agent</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-1">Create New Agent</h1>
           <p className="text-muted-foreground">Configure your new autonomous agent.</p>
         </div>
 
-        <Card className="bg-black/40 backdrop-blur-md border-white/10">
+        <Card className="bg-background/40 backdrop-blur-md border-border">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-foreground flex items-center gap-2">
               <RobotIcon className="size-5 text-primary" weight="fill" />
               Agent Details
             </CardTitle>
@@ -74,9 +74,9 @@ export default function CreateAgentPage() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-white">Name</FormLabel>
+                      <FormLabel className="text-foreground">Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Trading Bot Alpha" {...field} className="bg-white/5 border-white/10 text-white placeholder:text-muted-foreground focus-visible:border-primary" />
+                        <Input placeholder="e.g., Trading Bot Alpha" {...field} className="bg-muted/30 border-border text-foreground placeholder:text-muted-foreground focus-visible:border-primary" />
                       </FormControl>
                       <FormDescription>
                         This is the public display name of your agent.
@@ -91,10 +91,10 @@ export default function CreateAgentPage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-white">Description</FormLabel>
+                      <FormLabel className="text-foreground">Description</FormLabel>
                       <FormControl>
                          <textarea
-                            className="flex min-h-[80px] w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white focus-visible:border-primary"
+                            className="flex min-h-[80px] w-full rounded-md border border-border bg-muted/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-foreground focus-visible:border-primary"
                             placeholder="Describe what this agent does..."
                             {...field}
                          />
