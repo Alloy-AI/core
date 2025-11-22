@@ -1,13 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Button } from "../../lib/components/ui/button";
-import { HouseIcon, SquaresFourIcon, RobotIcon, GearIcon } from "@phosphor-icons/react";
+import { SquaresFourIcon, RobotIcon, GearIcon } from "@phosphor-icons/react";
 
 export default function Sidebar() {
     const { pathname } = useLocation();
     const isActive = (path: string) => pathname === path;
 
     const menuItems = [
-        { label: "Home", path: "/", icon: HouseIcon },
         { label: "Dashboard", path: "/dashboard", icon: SquaresFourIcon },
         { label: "Agents", path: "/agents", icon: RobotIcon },
         { label: "Settings", path: "/settings", icon: GearIcon },

@@ -30,7 +30,7 @@ const app = (
             >
               <ThemeProvider defaultTheme="dark" storageKey="theme">
                 <RouterProvider router={router} />
-                <Toaster position="bottom-right" />
+                <Toaster position="bottom-right" theme="dark" />
               </ThemeProvider>
             </IconContext.Provider>
           </WagmiProvider>

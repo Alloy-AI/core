@@ -81,7 +81,7 @@ export default function Navbar() {
       {/* Left: Logo */}
       <motion.div variants={itemVariants} className="flex gap-3 items-center">
         <div className="relative group cursor-pointer">
-          <div className="absolute -inset-2 bg-gradient-to-r from-primary via-chart-2 to-chart-4 rounded-full opacity-10 blur-lg group-hover:opacity-20 transition-opacity duration-500" />
+          <div className="absolute -inset-2 bg-primary rounded-full opacity-10 blur-lg group-hover:opacity-20 transition-opacity duration-500" />
           <Image src="/static/logo.svg" alt="alloy" className="w-10 relative z-10" />
         </div>
         <span className="text-xl font-bold tracking-tight text-white">Alloy</span>
@@ -97,7 +97,7 @@ export default function Navbar() {
             className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group"
           >
             {link.name}
-            <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-gradient-to-r from-primary to-chart-2 transition-all duration-300 group-hover:w-full opacity-0 group-hover:opacity-100" />
+            <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-primary transition-all duration-300 group-hover:w-full opacity-0 group-hover:opacity-100" />
           </motion.a>
         ))}
       </motion.div>

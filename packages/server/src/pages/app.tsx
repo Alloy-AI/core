@@ -8,6 +8,8 @@ import { withPageErrorBoundary } from "@/src/lib/components/errors/PageErrorBoun
 import HomePage from "./home";
 import { useAnalytics } from '../lib/hooks/use-analytics';
 import DashboardPage from './dashboard';
+import CreateAgentPage from './dashboard/create-agent';
+import AgentsPage from './dashboard/agents';
 
 const rootRoute = createRootRoute({
   component: () => {
@@ -36,7 +38,24 @@ const dashboardRoute = createRoute({
     return withPageErrorBoundary(DashboardPage)({});
   },
 })
-const routeTree = rootRoute.addChildren([indexRoute, dashboardRoute])
+
+const createAgentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/dashboard/create-agent',
+  component: function CreateAgent() {
+    return withPageErrorBoundary(CreateAgentPage)({});
+  },
+})
+
+const agentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/agents',
+  component: function Agents() {
+    return withPageErrorBoundary(AgentsPage)({});
+  },
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, dashboardRoute, createAgentRoute, agentsRoute])
 const router = createRouter({
   routeTree,
 })

@@ -1,14 +1,15 @@
 import Layout from "./layout";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/src/lib/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/lib/components/ui/card";
 import { Image } from "@/src/lib/components/custom/Image";
-import { PlusIcon, RobotIcon, PulseIcon, MoneyIcon, LightningIcon, FileTextIcon } from "@phosphor-icons/react";
+import { PlusIcon, RobotIcon, PulseIcon, LightningIcon, FileTextIcon, UsersIcon, TrendUpIcon } from "@phosphor-icons/react";
 
 export default function DashboardPage() {
     const agents = [
-        { name: "Trading Bot Alpha", status: "Active", profit: "+12.5%", type: "Trading" },
-        { name: "Support Agent v2", status: "Idle", profit: "0%", type: "Support" },
-        { name: "Data Scraper X", status: "Active", profit: "+5.2%", type: "Utility" },
+        { name: "Trading Bot Alpha", status: "Active" },
+        { name: "Support Agent v2", status: "Idle" },
+        { name: "Data Scraper X", status: "Active" },
     ];
 
     return (
@@ -20,9 +21,11 @@ export default function DashboardPage() {
                         <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Dashboard</h1>
                         <p className="text-muted-foreground">Overview of your autonomous agents and performance.</p>
                     </div>
-                    <Button className="bg-primary hover:bg-primary/90 text-white shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
-                        <PlusIcon className="mr-2 size-4" weight="bold" />
-                        New Agent
+                    <Button variant="primary" asChild>
+                        <Link to="/dashboard/create-agent">
+                            <PlusIcon className="size-4" weight="bold" />
+                            New Agent
+                        </Link>
                     </Button>
                 </div>
 
@@ -31,7 +34,7 @@ export default function DashboardPage() {
                     {[
                         { label: "Total Agents", value: "12", change: "+2 this week", icon: RobotIcon },
                         { label: "Active Sessions", value: "843", change: "+12% vs last week", icon: PulseIcon },
-                        { label: "Total Revenue", value: "$4,250", change: "+8.5% this month", icon: MoneyIcon },
+                        { label: "Total Calls", value: "2.4k", change: "+150 this month", icon: TrendUpIcon },
                     ].map((stat, i) => (
                         <Card key={i} className="bg-black/40 backdrop-blur-md">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -65,15 +68,14 @@ export default function DashboardPage() {
                                                 <h3 className="font-medium text-white group-hover:text-primary transition-colors">{agent.name}</h3>
                                                 <div className="flex items-center gap-2 mt-1">
                                                     <span className={`inline-block w-1.5 h-1.5 rounded-full ${agent.status === "Active" ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-yellow-500"}`} />
-                                                    <span className="text-xs text-muted-foreground">{agent.status} • {agent.type}</span>
+                                                    <span className="text-xs text-muted-foreground">{agent.status}</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className={`font-medium ${agent.profit.startsWith("+") ? "text-green-400" : "text-muted-foreground"}`}>
-                                                {agent.profit}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground mt-1">ROI</div>
+                                            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white">
+                                                Details
+                                            </Button>
                                         </div>
                                     </div>
                                 ))}

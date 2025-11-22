@@ -56,7 +56,7 @@ export function UserDropdownButton() {
 				<DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
 					<DropdownMenuTrigger asChild>
 						<div className="relative group cursor-pointer">
-							<div className="absolute -inset-0.5 bg-gradient-to-r from-primary via-chart-2 to-chart-4 rounded-full opacity-10 blur-sm group-hover:opacity-20 transition-opacity duration-500" />
+							<div className="absolute -inset-0.5 bg-primary rounded-full opacity-10 blur-sm group-hover:opacity-20 transition-opacity duration-500" />
 							<Image
 								src={avatarUrl}
 								alt="Profile"
@@ -69,7 +69,7 @@ export function UserDropdownButton() {
 						</div>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
-						className="w-64 rounded-2xl mt-2 border border-white/10 bg-black/80 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] p-2"
+						className="w-64 rounded-2xl mt-4 border border-border bg-black/80 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] p-2"
 						align="end"
 						side="bottom"
 					>

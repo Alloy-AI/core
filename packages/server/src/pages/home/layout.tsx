@@ -1,5 +1,4 @@
 import Navbar from "@/src/pages/home/nav";
-import Sidebar from "@/src/pages/dashboard/sidebar";
 import ThemeSwitch from "@/src/lib/components/custom/ThemeSwitch";
 
 export default function Layout({
@@ -12,8 +11,6 @@ export default function Layout({
       <div className="h-[var(--navbar-height)] border-b-4 border-black">
         <Navbar />
       </div>
-
-      {/* <Sidebar /> */}
 
       <div className="ml-[var(--sidebar-width)] h-[calc(100dvh-var(--navbar-height))] @container/main">
         {children}
