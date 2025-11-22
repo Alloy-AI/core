@@ -2,6 +2,7 @@ import { appd } from "./lib/appd";
 import { Hono } from "hono";
 import { respond } from "./lib/Router";
 import { db } from "./db/client";
+import { getAgent } from "./lib/a2a";
 
 const app = new Hono();
 
@@ -169,6 +170,35 @@ app.patch('/tools/:id/:toolId/toggle', async (c) => {
         toolId,
         enabled: updatedTools[toolIndex].enabled
     }, 'Tool toggled successfully', 200);
+});
+
+// Other agents will hit this to learn capabilities
+app.get('/agents/:id/.well-known/a2a.json', async (c) => {
+    const { id } = c.req.param();
+    //TODO: get the agent id from the request
+    const agent = await getAgent({ id });
+    return respond.ok(c, {
+        agent
+    }, 'Agent card retrieved successfully', 200);
+});
+
+app.post('/a2a/rpc', async (c) => {
+    const body = await c.req.json();
+    
+    if (body.method === 'handshake') {
+        // 1. Verify sender identity (Signature check)
+        // 2. Negotiate capabilities
+        return respond.ok(c, { jsonrpc: "2.0", result: { status: "accepted" } }, 'Handshake successful', 200);
+    }
+
+    if (body.method === 'execute_task') {
+        const { task, inputs } = body.params;
+        // Trigger your internal agent logic here
+        // const result = await myAgent.run(task, inputs);
+        return respond.ok(c, { jsonrpc: "2.0", result: { output: "done" } }, 'Task executed successfully', 200);
+    }
+
+    return respond.err(c, 'Method not found', 404);
 });
 
 const _server = Bun.serve({

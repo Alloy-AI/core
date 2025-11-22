@@ -27,6 +27,7 @@ export function UserDropdownButton() {
 	const handleLogout = async () => {
 		try {
 			await logoutPrivy();
+			navigate({ to: "/" });
 		} catch (error) {
 			console.error("Logout failed:", error);
 		}
