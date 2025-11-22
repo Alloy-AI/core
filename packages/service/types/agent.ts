@@ -2,21 +2,6 @@ import { Address } from "viem";
 
 export interface IAgent {
     generateResponse(args: { message: string, chatId?: string }): Promise<string>;
-    registerNewChat(): Promise<string>;
-    getChatInformation(args: { chatId: string }): Promise<AgentDescriptor>;
-    updateBaseSystemPrompt(args: { newPrompt: string }): Promise<void>;
-
-    addSystemPromptSnippet(args: { label: string, text: string }): Promise<string>;
-    removeSystemPromptSnippet(args: { snippetId: string }): Promise<void>;
-    toggleSystemPromptSnippet(args: { snippetId: string }): Promise<void>;
-
-    addTool(args: { label: string, kind: "builtin" | "mcp", ref: string, config?: Record<string, any> }): Promise<string>;
-    removeTool(args: { toolId: string }): Promise<void>;
-    toggleTool(args: { toolId: string }): Promise<void>;
-
-    addMCPServer(args: { name: string, transport: "stdio" | "websocket" | "custom", connectionInfo: any }): Promise<string>;
-    removeMCPServer(args: { serverId: string }): Promise<void>;
-    toggleMCPServer(args: { serverId: string }): Promise<void>;
 }
 
 export type AgentDescriptor = {
