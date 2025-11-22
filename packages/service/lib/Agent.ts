@@ -1,9 +1,9 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
+import { z } from "zod";
 import { db } from "../db/client";
 import type { AgentDescriptor, IAgent } from "../types/agent";
 import { MCPClient } from "./mcpClient";
-import { z } from "zod";
 
 export class Agent implements IAgent {
   private groq: ReturnType<typeof createOpenAI>;

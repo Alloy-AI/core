@@ -34,7 +34,7 @@ export type AgentDescriptor = {
     kind: "builtin" | "mcp";
     ref: string;
     enabled: boolean;
-    config?: Record<string, any>;
+    config?: Record<string, unknown>;
   }[];
 
   mcpServers: {
@@ -91,5 +91,5 @@ type MCPHttpConnection = {
 };
 
 type MCPCustomConnection = {
-  [key: string]: any; // your own schema
+  [key: string]: unknown; // your own schema
 };
