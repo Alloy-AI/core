@@ -1,17 +1,16 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Button } from "../../lib/components/ui/button";
-import { icons } from "lucide-react";
-import Icon from "@/src/lib/components/custom/Icon";
+import { HouseIcon, SquaresFourIcon, RobotIcon, GearIcon } from "@phosphor-icons/react";
 
 export default function Sidebar() {
     const { pathname } = useLocation();
     const isActive = (path: string) => pathname === path;
 
     const menuItems = [
-        { label: "Home", path: "/", icon: "House" as keyof typeof icons },
-        { label: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" as keyof typeof icons },
-        { label: "Agents", path: "/agents", icon: "Bot" as keyof typeof icons },
-        { label: "Settings", path: "/settings", icon: "Settings" as keyof typeof icons },
+        { label: "Home", path: "/", icon: HouseIcon },
+        { label: "Dashboard", path: "/dashboard", icon: SquaresFourIcon },
+        { label: "Agents", path: "/agents", icon: RobotIcon },
+        { label: "Settings", path: "/settings", icon: GearIcon },
     ];
 
     return (
@@ -32,7 +31,7 @@ export default function Sidebar() {
                             asChild
                         >
                             <Link to={item.path}>
-                                <Icon name={item.icon} className={`size-5 ${isActive(item.path) ? "text-primary" : ""}`} />
+                                <item.icon className={`size-5 ${isActive(item.path) ? "text-primary" : ""}`} />
                                 <span className="font-medium">{item.label}</span>
                                 {isActive(item.path) && (
                                     <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />

@@ -76,12 +76,12 @@ export default function Navbar() {
       variants={navVariants}
       initial="hidden"
       animate="visible"
-      className="fixed top-6 left-0 right-0 mx-auto max-w-5xl z-50 flex items-center justify-between px-6 py-3 rounded-full border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_0_20px_rgba(0,0,0,0.2)]"
+      className="fixed top-6 left-0 right-0 mx-auto max-w-5xl z-50 flex items-center justify-between px-6 py-3 rounded-full border bg-black/40 backdrop-blur-xl shadow-[0_0_20px_rgba(0,0,0,0.2)]"
     >
       {/* Left: Logo */}
       <motion.div variants={itemVariants} className="flex gap-3 items-center">
         <div className="relative group cursor-pointer">
-          <div className="absolute -inset-2 bg-gradient-to-r from-primary via-chart-2 to-chart-4 rounded-full opacity-20 blur-lg group-hover:opacity-40 transition-opacity duration-500" />
+          <div className="absolute -inset-2 bg-gradient-to-r from-primary via-chart-2 to-chart-4 rounded-full opacity-10 blur-lg group-hover:opacity-20 transition-opacity duration-500" />
           <Image src="/static/logo.svg" alt="alloy" className="w-10 relative z-10" />
         </div>
         <span className="text-xl font-bold tracking-tight text-white">Alloy</span>
