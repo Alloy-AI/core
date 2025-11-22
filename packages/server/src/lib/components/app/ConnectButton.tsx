@@ -19,14 +19,14 @@ export default function ConnectButton() {
 	return (
 		<motion.div
 			className="flex items-center gap-2"
-			initial={{ opacity: 0, x: 30 }}
+			initial={{ opacity: 0, x: 20 }}
 			animate={{ opacity: 1, x: 0 }}
 			transition={{
 				type: "spring",
 				stiffness: 230,
 				damping: 30,
 				mass: 1.2,
-				delay: 0.78,
+				delay: 0.3,
 			}}
 		>
 			{/* Sign In button - only show when not authenticated */}

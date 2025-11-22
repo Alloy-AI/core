@@ -1,4 +1,4 @@
-import Navbar from "@/src/lib/components/app/Navbar";
+import Navbar from "@/src/pages/home/nav";
 import Sidebar from "@/src/lib/components/app/Sidebar";
 import ThemeSwitch from "@/src/lib/components/custom/ThemeSwitch";
 

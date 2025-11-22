@@ -1,8 +1,8 @@
-import { Button } from "../ui/button";
+import { Button } from "../../lib/components/ui/button";
 import { useLocation } from "@tanstack/react-router";
-import { Image } from "../custom/Image";
+import { Image } from "../../lib/components/custom/Image";
 import { ListIcon } from "@phosphor-icons/react";
-import ConnectButton from "./ConnectButton";
+import ConnectButton from "../../lib/components/app/ConnectButton";
 
 export default function Navbar() {
   const location = useLocation();

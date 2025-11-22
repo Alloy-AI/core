@@ -1,7 +1,11 @@
+import Layout from "./layout";
+
 export default function DashboardPage() {
     return (
-        <div>
+        <Layout>
+            <div className="h-full flex flex-col items-center justify-center">
             <h1>Dashboard</h1>
-        </div>
+            </div>
+        </Layout>
     )
 }
