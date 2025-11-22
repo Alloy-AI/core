@@ -3,9 +3,10 @@ import type { AgentDescriptor } from "../types/agent";
 
 const sql = new SQL("");
 
-type AgentData = Omit<AgentDescriptor, "registration">;
+type AgentData = Omit<AgentDescriptor, "registration" | "id">;
 
-async function insertMessage(chatId: string, walletAddress: string, role: string, content: string) {
+async function insertMessage(args: { chatId: string, walletAddress: string, role: string, content: string }) {
+    const { chatId, walletAddress, role, content } = args;
     const result = await sql`
         INSERT INTO chat_history (chat_id, wallet_address, role, content)
         VALUES (${chatId}, ${walletAddress}, ${role}, ${content})
@@ -14,7 +15,8 @@ async function insertMessage(chatId: string, walletAddress: string, role: string
     return result[0];
 }
 
-async function getChatHistory(chatId: string) {
+async function getChatHistory(args: { chatId: string }) {
+    const { chatId } = args;
     const results = await sql`
         SELECT * FROM chat_history
         WHERE chat_id = ${chatId}
@@ -23,7 +25,8 @@ async function getChatHistory(chatId: string) {
     return results;
 }
 
-async function getChatsByWallet(walletAddress: string) {
+async function getChatsByWallet(args: { walletAddress: string }) {
+    const { walletAddress } = args;
     const results = await sql`
         SELECT DISTINCT chat_id FROM chat_history
         WHERE wallet_address = ${walletAddress}
@@ -31,36 +34,41 @@ async function getChatsByWallet(walletAddress: string) {
     return results.map((row: any) => row.chat_id);
 }
 
-async function deleteChatHistory(chatId: string) {
+async function deleteChatHistory(args: { chatId: string }) {
+    const { chatId } = args;
     await sql`DELETE FROM chat_history WHERE chat_id = ${chatId}`;
 }
 
-async function deleteChatsByWallet(walletAddress: string) {
+async function deleteChatsByWallet(args: { walletAddress: string }) {
+    const { walletAddress } = args;
     await sql`DELETE FROM chat_history WHERE wallet_address = ${walletAddress}`;
 }
 
-async function getAllChatIds() {
+async function getAllChatIds(args: {}) {
+    const {} = args;
     const results = await sql`SELECT DISTINCT chat_id FROM chat_history`;
     return results.map((row: any) => row.chat_id);
 }
 
-async function createAgent(agentData: AgentData) {
+async function createAgent(args: { agentData: AgentData }) {
+    const { agentData } = args;
     const result = await sql`
-        INSERT INTO agents (id, registration_piece_cid, base_system_prompt, knowledge_bases, tools, mcp_servers)
-        VALUES (${agentData.id}, ${agentData.registrationPieceCid}, ${agentData.baseSystemPrompt}, ${JSON.stringify(agentData.knowledgeBases)}, ${JSON.stringify(agentData.tools)}, ${JSON.stringify(agentData.mcpServers)})
+        INSERT INTO agents (registration_piece_cid, base_system_prompt, knowledge_bases, tools, mcp_servers)
+        VALUES (${agentData.registrationPieceCid}, ${agentData.baseSystemPrompt}, ${JSON.stringify(agentData.knowledgeBases)}, ${JSON.stringify(agentData.tools)}, ${JSON.stringify(agentData.mcpServers)})
         RETURNING id
     `;
     return result[0];
 }
 
-async function getAgent(id: string) {
+async function getAgent(args: { id: string }) {
+    const { id } = args;
     const result = await sql`
         SELECT * FROM agents WHERE id = ${id}
     `;
     if (result.length === 0) return null;
     const row = result[0];
     return {
-        id: row.id,
+        id: String(row.id),
         registrationPieceCid: row.registration_piece_cid,
         baseSystemPrompt: row.base_system_prompt,
         knowledgeBases: JSON.parse(row.knowledge_bases),
@@ -69,7 +77,8 @@ async function getAgent(id: string) {
     };
 }
 
-async function updateAgent(id: string, updates: Partial<AgentData>) {
+async function updateAgent(args: { id: string, updates: Partial<AgentData> }) {
+    const { id, updates } = args;
     const fields = [];
     const values = [];
     if (updates.registrationPieceCid !== undefined) {
@@ -98,14 +107,16 @@ async function updateAgent(id: string, updates: Partial<AgentData>) {
     await sql.unsafe(query, values);
 }
 
-async function deleteAgent(id: string) {
+async function deleteAgent(args: { id: string }) {
+    const { id } = args;
     await sql`DELETE FROM agents WHERE id = ${id}`;
 }
 
-async function getAllAgents() {
+async function getAllAgents(args: {}) {
+    const {} = args;
     const results = await sql`SELECT * FROM agents`;
     return results.map((row: any) => ({
-        id: row.id,
+        id: String(row.id),
         registrationPieceCid: row.registration_piece_cid,
         baseSystemPrompt: row.base_system_prompt,
         knowledgeBases: JSON.parse(row.knowledge_bases),
