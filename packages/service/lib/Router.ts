@@ -1,61 +1,50 @@
-type RouteResponse = string | { body: string; status?: number; headers?: Record<string, string> };
-type RouteHandler = (ctx: Context) => RouteResponse | Promise<RouteResponse>;
+import type { Context } from "hono";
+import type { ResponseHeader } from "hono/utils/headers";
+import type {
+	ClientErrorStatusCode,
+	ServerErrorStatusCode,
+} from "hono/utils/http-status";
+import type { BaseMime } from "hono/utils/mime";
+import type { JSONObject } from "hono/utils/types";
+import { jsonStringify } from "../lib/json";
 
-export class Context {
-    req: Request;
+export const respond = {
+	ok: <
+		C extends Context,
+		T extends JSONObject | Record<string, unknown>,
+		U extends 200 | 201 | 202 | 303,
+	>(
+		ctx: C,
+		data: T,
+		message: string,
+		status: U,
+		headers?: HeaderRecord,
+	) => {
+		ctx.status(status);
+		for (const [name, value] of Object.entries(headers || {})) {
+			ctx.header(name, value);
+		}
+		return ctx.json({ success: true, data, message }); //status,headers);
+	},
 
-    constructor(req: Request) {
-        this.req = req;
-    }
+	err: <
+		C extends Context,
+		U extends ClientErrorStatusCode | ServerErrorStatusCode,
+	>(
+		ctx: C,
+		message: string,
+		status: U,
+		headers?: HeaderRecord,
+	) => {
+		ctx.status(status);
+		for (const [name, value] of Object.entries(headers || {})) {
+			ctx.header(name, value);
+		}
+		return ctx.json({ success: false, error: jsonStringify(message) }); //, status, headers);
+	},
+};
 
-    err(message: string, status: number = 400): RouteResponse {
-        return {
-            body: JSON.stringify({ message, success: false }),
-            status,
-            headers: { 'Content-Type': 'application/json' }
-        };
-    }
-
-    ok(data: any, message: string = '', status: number = 200): RouteResponse {
-        return {
-            body: JSON.stringify({ message, success: true, data }),
-            status,
-            headers: { 'Content-Type': 'application/json' }
-        };
-    }
-}
-
-export class Router {
-    private routes: Map<string, Map<string, RouteHandler>> = new Map();
-
-    get(path: string, handler: RouteHandler) {
-        if (!this.routes.has('GET')) this.routes.set('GET', new Map());
-        this.routes.get('GET')!.set(path, handler);
-    }
-
-    post(path: string, handler: RouteHandler) {
-        if (!this.routes.has('POST')) this.routes.set('POST', new Map());
-        this.routes.get('POST')!.set(path, handler);
-    }
-
-    async handle(req: Request): Promise<Response> {
-        const url = new URL(req.url);
-        const methodRoutes = this.routes.get(req.method);
-        if (methodRoutes) {
-            const handler = methodRoutes.get(url.pathname);
-            if (handler) {
-                const ctx = new Context(req);
-                const result = await handler(ctx);
-                if (typeof result === 'string') {
-                    return new Response(result);
-                } else {
-                    return new Response(result.body, {
-                        status: result.status || 200,
-                        headers: result.headers || {}
-                    });
-                }
-            }
-        }
-        return new Response("Not Found", { status: 404 });
-    }
-}
+type HeaderRecord =
+	| Record<"Content-Type", BaseMime>
+	| Record<ResponseHeader, string>
+	| Record<string, string>;
