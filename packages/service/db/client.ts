@@ -45,7 +45,7 @@ async function deleteChatsByWallet(args: { walletAddress: string }) {
 }
 
 async function getAllChatIds(args: {}) {
-    const {} = args;
+    const { } = args;
     const results = await sql`SELECT DISTINCT chat_id FROM chat_history`;
     return results.map((row: any) => row.chat_id);
 }
@@ -113,7 +113,7 @@ async function deleteAgent(args: { id: string }) {
 }
 
 async function getAllAgents(args: {}) {
-    const {} = args;
+    const { } = args;
     const results = await sql`SELECT * FROM agents`;
     return results.map((row: any) => ({
         id: String(row.id),
