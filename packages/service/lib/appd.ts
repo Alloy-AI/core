@@ -4,6 +4,8 @@ import {
     KeyKind,
     ROFL_SOCKET_PATH
 } from '@oasisprotocol/rofl-client';
+import { hexToBytes, isHex } from 'viem';
+import { deriveAesGcmKey } from './crypto';
 
 const client = new RoflClient();
 
@@ -25,7 +27,19 @@ async function getEvmSecretKey(keyId: string): Promise<string> {
     );
 }
 
+async function getEncryptionKey() {
+    const pvtKeyHex = await client.generateKey("encryption", KeyKind.ED25519)
+    const viemPvtKeyHex = isHex(pvtKeyHex) ? pvtKeyHex : `0x${pvtKeyHex}` as const;
+    const pvtKeyBytes = hexToBytes(viemPvtKeyHex)
+
+    const cryptoKey = deriveAesGcmKey(new Uint8Array(pvtKeyBytes).buffer, "appd-encryption-key");
+
+    return cryptoKey;
+}
+
 export const appd = {
+    client,
+    getEncryptionKey,
     getAppId,
     getEvmSecretKey,
 }
