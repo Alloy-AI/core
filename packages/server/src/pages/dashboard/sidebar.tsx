@@ -1,29 +1,19 @@
-import {
-  GearIcon,
-  PuzzlePieceIcon,
-  RobotIcon,
-  SquaresFourIcon,
-} from "@phosphor-icons/react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Button } from "../../lib/components/ui/button";
+import { menuItems } from "@/src/lib/config";
 
 export default function Sidebar() {
   const { pathname } = useLocation();
   const isActive = (path: string) => pathname === path;
 
-  const menuItems = [
-    { label: "Dashboard", path: "/dashboard", icon: SquaresFourIcon },
-    { label: "Agents", path: "/agents", icon: RobotIcon },
-    { label: "Extensions", path: "/extensions", icon: PuzzlePieceIcon },
-    { label: "Settings", path: "/settings", icon: GearIcon },
-  ];
+  const sidebarItems = menuItems.filter(item => item.label !== "Home");
 
   return (
     <div className="fixed top-[var(--navbar-height)] h-[calc(100dvh-var(--navbar-height))] w-[var(--sidebar-width)] left-0 z-40 hidden sm:flex flex-col gap-4 p-4">
       {/* Glassmorphic Container */}
       <div className="h-full w-full rounded-2xl border bg-black/20 backdrop-blur-xl shadow-[inset_0_0_20px_rgba(255,255,255,0.02)] p-4 flex flex-col">
         <div className="flex flex-col w-full gap-2">
-          {menuItems.map((item) => (
+          {sidebarItems.map((item) => (
             <Button
               key={item.path}
               variant="ghost"

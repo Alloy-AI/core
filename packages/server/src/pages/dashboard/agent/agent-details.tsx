@@ -126,36 +126,38 @@ export default function AgentDetailsPage() {
         </div>
 
         <Tabs defaultValue="overview" className="w-full space-y-6">
-          <TabsList className="w-full justify-start bg-background/40 backdrop-blur-md border border-border p-1 h-auto">
-            <TabsTrigger
-              value="overview"
-              className="flex items-center gap-2 px-4 py-2"
-            >
-              <InfoIcon className="size-4" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger
-              value="extensions"
-              className="flex items-center gap-2 px-4 py-2"
-            >
-              <PuzzlePieceIcon className="size-4" />
-              Extensions
-            </TabsTrigger>
-            <TabsTrigger
-              value="integrations"
-              className="flex items-center gap-2 px-4 py-2"
-            >
-              <PlugsConnectedIcon className="size-4" />
-              Integrations
-            </TabsTrigger>
-            <TabsTrigger
-              value="api"
-              className="flex items-center gap-2 px-4 py-2"
-            >
-              <CodeIcon className="size-4" />
-              API Specs
-            </TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto pb-2 -mb-2">
+            <TabsList className="w-full sm:w-auto min-w-max justify-start bg-background/40 backdrop-blur-md border border-border p-1 h-auto flex-nowrap">
+              <TabsTrigger
+                value="overview"
+                className="flex items-center gap-2 px-4 py-2"
+              >
+                <InfoIcon className="size-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="extensions"
+                className="flex items-center gap-2 px-4 py-2"
+              >
+                <PuzzlePieceIcon className="size-4" />
+                Extensions
+              </TabsTrigger>
+              <TabsTrigger
+                value="integrations"
+                className="flex items-center gap-2 px-4 py-2"
+              >
+                <PlugsConnectedIcon className="size-4" />
+                Integrations
+              </TabsTrigger>
+              <TabsTrigger
+                value="api"
+                className="flex items-center gap-2 px-4 py-2"
+              >
+                <CodeIcon className="size-4" />
+                API Specs
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">

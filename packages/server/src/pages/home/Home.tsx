@@ -100,7 +100,7 @@ export default function HomePage() {
         initial="hidden"
         animate="visible"
       >
-        <h1 className="text-6xl md:text-8xl lg:text-9xl font-medium tracking-tighter mb-8 drop-shadow-2xl flex flex-col items-center">
+        <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[8rem] font-medium tracking-tighter mb-8 drop-shadow-2xl flex flex-col items-center">
           {/* First line: Build Intelligent */}
           <motion.span
             className="block mb-4"
@@ -150,11 +150,12 @@ export default function HomePage() {
           <motion.div
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            className="w-full sm:w-auto"
           >
             <Button
               variant="fusion"
               size="lg"
-              className="text-lg px-8 py-6 min-w-[160px] shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.6)] transition-all duration-300 border border-primary/50"
+              className="w-full sm:w-auto text-lg px-8 py-6 min-w-[160px] shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.6)] transition-all duration-300 border border-primary/50"
               onClick={handleStartBuilding}
             >
               Start Building
@@ -164,11 +165,12 @@ export default function HomePage() {
           <motion.div
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            className="w-full sm:w-auto"
           >
             <Button
               variant="outline"
               size="lg"
-              className="text-lg px-8 py-6 min-w-[160px] border-foreground/10 bg-foreground/5 hover:bg-foreground/10 text-foreground hover:text-foreground backdrop-blur-md"
+              className="w-full sm:w-auto text-lg px-8 py-6 min-w-[160px] border-foreground/10 bg-foreground/5 hover:bg-foreground/10 text-foreground hover:text-foreground backdrop-blur-md"
               asChild
             >
               <Link to="/docs">View Docs</Link>

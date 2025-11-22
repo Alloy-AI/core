@@ -22,6 +22,7 @@ export class Agent implements IAgent {
     }
     const agentDescriptor: AgentDescriptor = {
       id: agentData.id,
+      model: agentData.model,
       registrationPieceCid: agentData.registrationPieceCid,
       registration: registration,
       baseSystemPrompt: agentData.baseSystemPrompt,

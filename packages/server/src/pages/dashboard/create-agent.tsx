@@ -48,8 +48,8 @@ export default function CreateAgentPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-2xl space-y-8 relative">
-        <div className="absolute -top-16 left-0">
+      <div className="w-full max-w-2xl space-y-8 relative pt-8 md:pt-0">
+        <div className="md:absolute md:-top-16 md:left-0 mb-4 md:mb-0">
           <Button
             variant="ghost"
             asChild

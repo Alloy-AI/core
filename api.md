@@ -7,6 +7,18 @@ Legend:
 - ❌ **Missing**: No Database function or Route logic.
 
 ## ✅ Implemented
+### Agents
+- `GET /api/agents`: List all agents.
+- `POST /api/agents`: Create a new agent.
+- `GET /api/agents/:id`: Get agent details.
+- `PATCH /api/agents/:id`: Update agent details.
+- `DELETE /api/agents/:id`: Delete an agent.
+
+### Chat & Conversations
+- `GET /api/chats`: List conversations.
+- `POST /api/chats`: Start a new conversation.
+- `GET /api/chats/:id/messages`: Get message history.
+
 ### Tools & Extensions
 - `POST /api/tools/:agentId`: Add tool to agent.
 - `DELETE /api/tools/:agentId/:toolId`: Remove tool from agent.
@@ -17,27 +29,10 @@ Legend:
 - `GET /api/agents/:id/.well-known/a2a.json`: Agent capabilities discovery.
 
 ## ⚠️ Partial/Stub
-### Agents
-- `POST /api/agents`: Create a new agent. (Route: Stub, DB: `createAgent` exists)
-- `PATCH /api/agents/:id`: Update agent details. (Route: `PUT /base-system-prompt` only)
-
-### Chat & Conversations
-- `POST /api/chats`: Start a new conversation. (Route: Stub, DB: `createChat` exists)
 
 ### A2A Protocol (Agent-to-Agent)
 - `GET /api/agents/:id/pk`: Get Agent Public Key. (Stub)
 - `POST /api/a2a/rpc`: Agent JSON-RPC endpoint (handshake/execute). (Skeleton only)
-
-## 🛠️ DB Ready
-### Agents
-- `GET /api/agents`: List all agents. (DB: `getAllAgents`)
-- `GET /api/agents/:id`: Get agent details. (DB: `getAgent`)
-- `DELETE /api/agents/:id`: Delete an agent. (DB: `deleteAgent`)
-
-### Chat & Conversations
-- `GET /api/chats`: List conversations. (DB: `getChatsByWallet`)
-- `GET /api/chats/:id/messages`: Get message history. (DB: `getChatHistory`)
-- `POST /api/chats/:id/messages`: Send a message. (DB: `insertMessage` exists, AI logic missing)
 
 ## ❌ Missing
 ### Tools & Extensions

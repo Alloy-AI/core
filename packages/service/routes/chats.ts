@@ -3,6 +3,7 @@ import { db } from "../db/client";
 import { respond } from "../lib/Router";
 import { authenticated } from "../middleware/auth";
 import { InsertMessageSchema } from "../lib/zod";
+import { Agent } from "../lib/Agent";
 
 const app = new Hono();
 
@@ -52,7 +53,7 @@ app.get("/:id/messages", authenticated, async (ctx) => {
 app.post("/:id/messages", authenticated, async (ctx) => {
   const chatId = ctx.req.param("id");
   const body = await ctx.req.json();
-  
+
   // Validate input
   const result = InsertMessageSchema.safeParse({
     chatId,
@@ -73,7 +74,44 @@ app.post("/:id/messages", authenticated, async (ctx) => {
     return respond.err(ctx, "Unauthorized", 403);
   }
 
-  // TODO: Implement logic
+  // Get the agent for this chat
+  if (!chat.agentId) {
+    return respond.err(ctx, "Chat has no associated agent", 400);
+  }
+
+  const agentData = await db.getAgent({ id: chat.agentId.toString() });
+  if (!agentData) {
+    return respond.err(ctx, "Agent not found", 404);
+  }
+
+  // Insert user message
+  await db.insertMessage(result.data);
+
+  try {
+    // Generate AI response using Agent class
+    const agent = await Agent.fromId({ id: agentData.id });
+    const aiResponse = await agent.generateResponse({
+      message: result.data.content,
+      chatId: chatId
+    });
+
+    // Insert AI response
+    await db.insertMessage({
+      chatId,
+      role: "assistant",
+      content: aiResponse
+    });
+
+    return respond.ok(ctx, {
+      message: aiResponse,
+      role: "assistant",
+      chatId
+    }, "Message sent successfully", 201);
+
+  } catch (error) {
+    console.error("Error generating AI response:", error);
+    return respond.err(ctx, "Failed to generate response", 500);
+  }
 });
 
 export default app;

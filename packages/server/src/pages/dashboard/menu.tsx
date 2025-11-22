@@ -1,16 +1,14 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import type { icons } from "lucide-react";
-import Icon from "@/src/lib/components/custom/Icon";
 import { Image } from "@/src/lib/components/custom/Image";
 import { Button } from "@/src/lib/components/ui/button";
+import { menuItems } from "@/src/lib/config";
+import ThemeSwitch from "@/src/lib/components/custom/ThemeSwitch";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/src/lib/components/ui/sheet";
-
-type IconName = keyof typeof icons;
 
 interface MenuSheetProps {
   open: boolean;
@@ -20,17 +18,6 @@ interface MenuSheetProps {
 export default function MenuSheet({ open, onOpenChange }: MenuSheetProps) {
   const { pathname } = useLocation();
   const isActive = (path: string) => pathname === path;
-
-  const menuItems = [
-    { label: "Home", path: "/", icon: "House" as IconName },
-    {
-      label: "Dashboard",
-      path: "/dashboard",
-      icon: "LayoutDashboard" as IconName,
-    },
-    { label: "Agents", path: "/agents", icon: "Bot" as IconName },
-    { label: "Settings", path: "/settings", icon: "Settings" as IconName },
-  ];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -72,8 +59,7 @@ export default function MenuSheet({ open, onOpenChange }: MenuSheetProps) {
                 onClick={() => onOpenChange(false)}
               >
                 <Link to={item.path}>
-                  <Icon
-                    name={item.icon}
+                  <item.icon
                     className={`size-5 ${isActive(item.path) ? "text-primary" : ""}`}
                   />
                   <span className="font-medium">{item.label}</span>
@@ -86,7 +72,7 @@ export default function MenuSheet({ open, onOpenChange }: MenuSheetProps) {
           </div>
 
           {/* Footer / Pro Plan */}
-          <div className="mt-auto pt-4">
+          <div className="mt-auto pt-4 flex flex-col gap-4">
             <div className="rounded-xl bg-gradient-to-br from-primary/10 via-chart-2/5 to-chart-4/5 p-4 border border-white/5">
               <h4 className="font-medium text-sm text-white mb-1">Pro Plan</h4>
               <p className="text-xs text-muted-foreground mb-3">
@@ -98,6 +84,10 @@ export default function MenuSheet({ open, onOpenChange }: MenuSheetProps) {
               >
                 Upgrade
               </Button>
+            </div>
+            
+            <div className="flex justify-center">
+               <ThemeSwitch />
             </div>
           </div>
         </div>
