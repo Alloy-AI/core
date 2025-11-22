@@ -28,7 +28,6 @@ const indexRoute = createRoute({
   },
 })
 
-
 const routeTree = rootRoute.addChildren([indexRoute])
 const router = createRouter({
   routeTree,

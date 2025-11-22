@@ -1,6 +1,7 @@
 const envKeys = [
   "BUN_PUBLIC_PRIVY_APP_ID",
   "BUN_PUBLIC_SERVER_URL",
+  "BUN_PUBLIC_RUNTIME_CHAIN_ID",
   "BUN_VERSION",
   "PORT",
 ] as const;
