@@ -17,9 +17,9 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
 			config={{
 				defaultChain: runtimeChain,
 				supportedChains: [runtimeChain],
-				loginMethods: ["wallet", "google", "twitter", "github", "discord"],
+				loginMethods: ["wallet", "google", "twitter", "github", "email"],
 				appearance: {
-					theme: "light",
+					theme: "#0d0d0e",
 				},
 				embeddedWallets: {
 					ethereum: {
