@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 
+// Chat History Schemas
 export const InsertMessageSchema = z.object({
     chatId: z.string(),
-    walletAddress: z.string(),
     role: z.string(),
     content: z.string(),
 });
@@ -25,6 +25,10 @@ export const GetChatsByWalletSchema = z.object({
     walletAddress: z.string(),
 });
 
+export const GetChatsOfWalletAddressSchema = z.object({
+    walletAddress: z.string(),
+});
+
 export const DeleteChatHistorySchema = z.object({
     chatId: z.string(),
 });
@@ -32,9 +36,6 @@ export const DeleteChatHistorySchema = z.object({
 export const DeleteChatsByWalletSchema = z.object({
     walletAddress: z.string(),
 });
-
-export const GetAllChatIdsSchema = z.object({});
-
 
 const AddressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 
@@ -145,13 +146,44 @@ export const GetAllAgentsSchema = z.object({});
 
 
 // Raw database row schemas (before processing)
+export const GetAllChatIdsSchema = z.object({});
+
+// Chat Schemas
+export const ChatSchema = z.object({
+    id: z.string(),
+    walletAddress: z.string(),
+    agentId: z.number().nullable(),
+    createdAt: z.string(),
+});
+
+export const CreateChatSchema = z.object({
+    chatId: z.string(),
+    walletAddress: z.string(),
+    agentId: z.number().optional(),
+});
+
+export const GetChatSchema = z.object({
+    chatId: z.string(),
+});
+
+export const DeleteChatSchema = z.object({
+    chatId: z.string(),
+});
+
+// Raw database row schemas (before processing)
 export const RawChatHistoryRowSchema = z.object({
     id: z.number(),
     chat_id: z.string(),
-    wallet_address: z.string(),
     role: z.string(),
     content: z.string(), // encrypted
     timestamp: z.string(),
+});
+
+export const RawChatRowSchema = z.object({
+    id: z.string(),
+    wallet_address: z.string(),
+    agent_id: z.number().nullable(),
+    created_at: z.string(),
 });
 
 export const RawAgentRowSchema = z.object({

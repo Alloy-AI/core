@@ -7,9 +7,13 @@ import {
     GetChatHistorySchema,
     ChatHistoryRowSchema,
     GetChatsByWalletSchema,
+    GetChatsOfWalletAddressSchema,
     DeleteChatHistorySchema,
     DeleteChatsByWalletSchema,
     GetAllChatIdsSchema,
+    CreateChatSchema,
+    GetChatSchema,
+    DeleteChatSchema,
     CreateAgentSchema,
     GetAgentSchema,
     UpdateAgentSchema,
@@ -18,6 +22,8 @@ import {
     RawAgentRowSchema,
     DBAgentSchema,
     RawChatHistoryRowSchema,
+    RawChatRowSchema,
+    ChatSchema,
 } from "../lib/zod";
 
 const sql = new SQL("");
@@ -43,15 +49,15 @@ interface AgentRow {
     mcp_servers: string;
 }
 
-async function insertMessage(args: { chatId: string, walletAddress: string, role: string, content: string }) {
+async function insertMessage(args: { chatId: string, role: string, content: string }) {
     const validatedArgs = InsertMessageSchema.parse(args);
-    const { chatId, walletAddress, role, content } = validatedArgs;
+    const { chatId, role, content } = validatedArgs;
 
     const encryptedContent = await encryptSelf({ message: content });
 
     const result = await sql`
-        INSERT INTO chat_history (chat_id, wallet_address, role, content)
-        VALUES (${chatId}, ${walletAddress}, ${role}, ${encryptedContent})
+        INSERT INTO chat_history (chat_id, role, content)
+        VALUES (${chatId}, ${role}, ${encryptedContent})
         RETURNING id
     `;
     return result[0];
@@ -61,13 +67,15 @@ async function getChatHistory(args: { chatId: string }) {
     const validatedArgs = GetChatHistorySchema.parse(args);
     const { chatId } = validatedArgs;
     const results = await sql`
-        SELECT * FROM chat_history
-        WHERE chat_id = ${chatId}
-        ORDER BY timestamp ASC
+        SELECT ch.*, c.wallet_address
+        FROM chat_history ch
+        JOIN chats c ON ch.chat_id = c.id
+        WHERE ch.chat_id = ${chatId}
+        ORDER BY ch.timestamp ASC
     `;
 
     return results.map((row: unknown) => {
-        const rawRow = RawChatHistoryRowSchema.parse(row);
+        const rawRow = RawChatHistoryRowSchema.merge(z.object({ wallet_address: z.string() })).parse(row);
         const decryptedRow = {
             ...rawRow,
             content: decryptSelf({ ciphertext: rawRow.content })
@@ -80,13 +88,32 @@ async function getChatsByWallet(args: { walletAddress: string }) {
     const validatedArgs = GetChatsByWalletSchema.parse(args);
     const { walletAddress } = validatedArgs;
     const results = await sql`
-        SELECT DISTINCT chat_id FROM chat_history
+        SELECT id FROM chats
         WHERE wallet_address = ${walletAddress}
     `;
 
     return results.map((row: unknown) => {
-        const parsed = z.object({ chat_id: z.string() }).parse(row);
-        return parsed.chat_id;
+        const parsed = z.object({ id: z.string() }).parse(row);
+        return parsed.id;
+    });
+}
+
+async function getChatsOfWalletAddress(args: { walletAddress: string }) {
+    const validatedArgs = GetChatsOfWalletAddressSchema.parse(args);
+    const { walletAddress } = validatedArgs;
+    const results = await sql`
+        SELECT * FROM chats
+        WHERE wallet_address = ${walletAddress}
+    `;
+
+    return results.map((row: unknown) => {
+        const parsedRow = RawChatRowSchema.parse(row);
+        return ChatSchema.parse({
+            id: parsedRow.id,
+            walletAddress: parsedRow.wallet_address,
+            agentId: parsedRow.agent_id,
+            createdAt: parsedRow.created_at,
+        });
     });
 }
 
@@ -99,16 +126,47 @@ async function deleteChatHistory(args: { chatId: string }) {
 async function deleteChatsByWallet(args: { walletAddress: string }) {
     const validatedArgs = DeleteChatsByWalletSchema.parse(args);
     const { walletAddress } = validatedArgs;
-    await sql`DELETE FROM chat_history WHERE wallet_address = ${walletAddress}`;
+    await sql`DELETE FROM chats WHERE wallet_address = ${walletAddress}`;
 }
 
 async function getAllChatIds(args: {}) {
     const validatedArgs = GetAllChatIdsSchema.parse(args);
-    const results = await sql`SELECT DISTINCT chat_id FROM chat_history`;
+    const results = await sql`SELECT id FROM chats`;
     return results.map((row: unknown) => {
-        const parsed = z.object({ chat_id: z.string() }).parse(row);
-        return parsed.chat_id;
+        const parsed = z.object({ id: z.string() }).parse(row);
+        return parsed.id;
     });
+}
+
+async function createChat(args: { chatId: string, walletAddress: string, agentId?: number }) {
+    const validatedArgs = CreateChatSchema.parse(args);
+    const { chatId, walletAddress, agentId } = validatedArgs;
+    await sql`
+        INSERT INTO chats (id, wallet_address, agent_id)
+        VALUES (${chatId}, ${walletAddress}, ${agentId ?? null})
+    `;
+}
+
+async function getChat(args: { chatId: string }) {
+    const validatedArgs = GetChatSchema.parse(args);
+    const { chatId } = validatedArgs;
+    const result = await sql`
+        SELECT * FROM chats WHERE id = ${chatId}
+    `;
+    if (result.length === 0) return null;
+    const row = RawChatRowSchema.parse(result[0]);
+    return ChatSchema.parse({
+        id: row.id,
+        walletAddress: row.wallet_address,
+        agentId: row.agent_id,
+        createdAt: row.created_at,
+    });
+}
+
+async function deleteChat(args: { chatId: string }) {
+    const validatedArgs = DeleteChatSchema.parse(args);
+    const { chatId } = validatedArgs;
+    await sql`DELETE FROM chats WHERE id = ${chatId}`;
 }
 
 async function createAgent(args: { agentData: AgentData }) {
@@ -199,9 +257,13 @@ export const db = {
     insertMessage,
     getChatHistory,
     getChatsByWallet,
+    getChatsOfWalletAddress,
     deleteChatHistory,
     deleteChatsByWallet,
     getAllChatIds,
+    createChat,
+    getChat,
+    deleteChat,
     createAgent,
     getAgent,
     updateAgent,
