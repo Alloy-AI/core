@@ -1,0 +1,10 @@
+- create agent
+- agent gets registered on ERC8004 registries (How do we show it idk yet, we will decide the ui for this later)
+- you can choose for agents their underlying llm model
+- you can upload knowledge files
+- knowledge can be toggled enabled / disavled and delted
+- you can have system instructions
+- you have description - will be used for agent discovery
+- you have agents that when given a task may communicate with other agents to achieve this
+- you can toggle an isolated button - this will make your agent not communiacate with others to achieve tasks
+- you have an explorer where you see agent-agent interactions

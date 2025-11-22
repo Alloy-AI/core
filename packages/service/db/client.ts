@@ -1,6 +1,6 @@
 import { SQL } from "bun";
 
-const sql = new SQL("postgresql://user:password@localhost:5432/dbname"); // Replace with actual connection string
+const sql = new SQL("");
 
 async function insertMessage(chatId: string, walletAddress: string, role: string, content: string) {
     const result = await sql`

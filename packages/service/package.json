@@ -4,6 +4,7 @@
         "oasis:push": "docker compose build; oasis rofl build; oasis rofl update; oasis rofl deploy"
     },
     "dependencies": {
+        "@filoz/synapse-sdk": "^0.36.0",
         "@oasisprotocol/rofl-client": "^0.1.2",
         "axios": "^1.13.2"
     }

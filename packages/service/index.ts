@@ -8,7 +8,6 @@ router.get('/app-id', (ctx) => {
 });
 
 router.get('/agents/:id/pk', (ctx) => {
-
     return ctx.ok({ status: 'ok' });
 });
 
