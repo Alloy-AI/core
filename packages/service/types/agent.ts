@@ -19,9 +19,10 @@ export interface IAgent {
     toggleMCPServer(args: { serverId: string }): Promise<void>;
 }
 
-type AgentDescriptor = {
+export type AgentDescriptor = {
     id: string;
 
+    registrationPieceCid: string;
     registration: {
         type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
         name: string;
@@ -29,20 +30,22 @@ type AgentDescriptor = {
         image?: string;
         endpoints: RegistrationEndpoint[];
         registrations: ERC8004Registration[];
+        supportedTrust: string[]
     }
 
     baseSystemPrompt: string;
 
-    systemPromptSnippets: {
+    knowledgeBases: {
         id: string;
-        label: string;
-        text: string;
+        name: string;
+        description: string;
+        pieceCid: string;
         enabled: boolean;
     }[];
 
     tools: {
         id: string;
-        label: string;
+        name: string;
         kind: "builtin" | "mcp";
         ref: string;
         enabled: boolean;

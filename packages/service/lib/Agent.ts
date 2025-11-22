@@ -1,4 +1,4 @@
-import { IAgent } from "./types/agent";
+import { IAgent } from "../types/agent";
 
 class Agent implements IAgent {
 
