@@ -1,20 +1,23 @@
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { cn } from '@/src/lib/utils';
-import type { Components } from 'react-markdown';
+import type { Components } from "react-markdown";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import remarkGfm from "remark-gfm";
+import { cn } from "@/src/lib/utils";
 
 interface MarkdownRendererProps {
   content: string;
   className?: string;
 }
 
-export default function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+export default function MarkdownRenderer({
+  content,
+  className,
+}: MarkdownRendererProps) {
   const components: Components = {
     // Customize code blocks
     code({ node, inline, className, children, ...props }: any) {
-      const match = /language-(\w+)/.exec(className || '');
+      const match = /language-(\w+)/.exec(className || "");
       return !inline && match ? (
         <SyntaxHighlighter
           style={oneDark}
@@ -23,14 +26,17 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
           className="rounded-lg"
           customStyle={{
             margin: 0,
-            borderRadius: '0.5rem',
-            backgroundColor: 'hsl(var(--muted))',
+            borderRadius: "0.5rem",
+            backgroundColor: "hsl(var(--muted))",
           }}
         >
-          {String(children).replace(/\n$/, '')}
+          {String(children).replace(/\n$/, "")}
         </SyntaxHighlighter>
       ) : (
-        <code className="bg-muted/50 px-1 py-0.5 rounded text-sm text-foreground" {...props}>
+        <code
+          className="bg-muted/50 px-1 py-0.5 rounded text-sm text-foreground"
+          {...props}
+        >
           {children}
         </code>
       );
@@ -64,7 +70,10 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
     table({ children, ...props }: any) {
       return (
         <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse border border-border/50" {...props}>
+          <table
+            className="min-w-full border-collapse border border-border/50"
+            {...props}
+          >
             {children}
           </table>
         </div>
@@ -82,7 +91,10 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
     },
     td({ children, ...props }: any) {
       return (
-        <td className="border border-border/50 px-3 py-2 text-foreground" {...props}>
+        <td
+          className="border border-border/50 px-3 py-2 text-foreground"
+          {...props}
+        >
           {children}
         </td>
       );
@@ -135,25 +147,27 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
   };
 
   return (
-    <div className={cn(
-      'prose prose-sm sm:prose-base max-w-none',
-      'prose-headings:text-foreground',
-      'prose-p:text-foreground',
-      'prose-strong:text-foreground',
-      'prose-em:text-foreground',
-      'prose-code:text-foreground prose-code:bg-muted/50',
-      'prose-pre:bg-muted/30 prose-pre:border prose-pre:border-border/50',
-      'prose-blockquote:text-muted-foreground prose-blockquote:border-l-muted-foreground/30',
-      'prose-ul:text-foreground prose-ol:text-foreground',
-      'prose-li:text-foreground',
-      'prose-table:text-foreground',
-      'prose-th:text-foreground prose-td:text-foreground',
-      'prose-a:text-primary hover:prose-a:text-primary/80',
-      className
-    )}>
+    <div
+      className={cn(
+        "prose prose-sm sm:prose-base max-w-none",
+        "prose-headings:text-foreground",
+        "prose-p:text-foreground",
+        "prose-strong:text-foreground",
+        "prose-em:text-foreground",
+        "prose-code:text-foreground prose-code:bg-muted/50",
+        "prose-pre:bg-muted/30 prose-pre:border prose-pre:border-border/50",
+        "prose-blockquote:text-muted-foreground prose-blockquote:border-l-muted-foreground/30",
+        "prose-ul:text-foreground prose-ol:text-foreground",
+        "prose-li:text-foreground",
+        "prose-table:text-foreground",
+        "prose-th:text-foreground prose-td:text-foreground",
+        "prose-a:text-primary hover:prose-a:text-primary/80",
+        className,
+      )}
+    >
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
       </ReactMarkdown>
     </div>
   );
-} 
+}

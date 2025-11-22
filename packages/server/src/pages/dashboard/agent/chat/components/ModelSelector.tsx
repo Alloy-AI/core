@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { formatEther } from "viem";
+import Icon from "@/src/lib/components/custom/Icon";
+import { Badge } from "@/src/lib/components/ui/badge";
 import { Button } from "@/src/lib/components/ui/button";
 import {
   Select,
@@ -7,12 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/lib/components/ui/select";
-import { Badge } from "@/src/lib/components/ui/badge";
-import Icon from "@/src/lib/components/custom/Icon";
 import { useHaitheApi } from "@/src/lib/hooks/use-haithe-api";
-import { useStore } from "@/src/lib/hooks/use-store";
-import { useChatStore } from "@/src/lib/hooks/use-store";
-import { formatEther } from "viem";
+import { useChatStore, useStore } from "@/src/lib/hooks/use-store";
 
 interface LLMModel {
   id: number;
@@ -29,7 +28,8 @@ export default function ModelSelector() {
   const { selectedModel, setSelectedModel } = useChatStore();
 
   // Get enabled models only
-  const { data: enabledModels, isLoading: isLoadingEnabled } = haithe.getEnabledModels(Number(selectedOrg?.id));
+  const { data: enabledModels, isLoading: isLoadingEnabled } =
+    haithe.getEnabledModels(Number(selectedOrg?.id));
 
   // Auto-select first model if models exist and none is selected
   useEffect(() => {
@@ -40,11 +40,16 @@ export default function ModelSelector() {
 
   const getProviderIcon = (provider: string) => {
     switch (provider) {
-      case "Google": return "Sparkles";
-      case "OpenAI": return "Zap";
-      case "DeepSeek": return "Brain";
-      case "Haithe": return "Star";
-      default: return "Bot";
+      case "Google":
+        return "Sparkles";
+      case "OpenAI":
+        return "Zap";
+      case "DeepSeek":
+        return "Brain";
+      case "Haithe":
+        return "Star";
+      default:
+        return "Bot";
     }
   };
 
@@ -73,8 +78,8 @@ export default function ModelSelector() {
           className={className}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-            target.nextElementSibling?.classList.remove('hidden');
+            target.style.display = "none";
+            target.nextElementSibling?.classList.remove("hidden");
           }}
         />
       );
@@ -86,7 +91,9 @@ export default function ModelSelector() {
     setSelectedModel(modelName);
   };
 
-  const currentModel = enabledModels?.find((model: LLMModel) => model.name === selectedModel);
+  const currentModel = enabledModels?.find(
+    (model: LLMModel) => model.name === selectedModel,
+  );
 
   if (isLoadingEnabled) {
     return (
@@ -107,7 +114,10 @@ export default function ModelSelector() {
   }
 
   return (
-    <Select value={selectedModel || undefined} onValueChange={handleModelSelect}>
+    <Select
+      value={selectedModel || undefined}
+      onValueChange={handleModelSelect}
+    >
       <SelectTrigger className="w-auto gap-2">
         <div className="flex items-center gap-2">
           {currentModel && renderProviderLogo(currentModel.provider, "size-3")}
@@ -122,43 +132,51 @@ export default function ModelSelector() {
       </SelectTrigger>
 
       <SelectContent className="mt-2 w-80">
-          <div className="space-y-1 p-2">
-            {enabledModels.map((model: LLMModel) => (
-              <SelectItem
-                key={model.id}
-                value={model.name}
-                className="p-3 rounded-lg cursor-pointer"
-              >
-                <div className="flex items-center gap-3 w-full">
-                  <div className="p-1.5 rounded-md bg-muted flex items-center justify-center min-w-[28px] min-h-[28px]">
-                    {renderProviderLogo(model.provider, "size-3.5")}
-                    <Icon name={getProviderIcon(model.provider)} className="size-3.5 text-muted-foreground hidden" />
+        <div className="space-y-1 p-2">
+          {enabledModels.map((model: LLMModel) => (
+            <SelectItem
+              key={model.id}
+              value={model.name}
+              className="p-3 rounded-lg cursor-pointer"
+            >
+              <div className="flex items-center gap-3 w-full">
+                <div className="p-1.5 rounded-md bg-muted flex items-center justify-center min-w-[28px] min-h-[28px]">
+                  {renderProviderLogo(model.provider, "size-3.5")}
+                  <Icon
+                    name={getProviderIcon(model.provider)}
+                    className="size-3.5 text-muted-foreground hidden"
+                  />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm text-foreground truncate">
+                      {model.display_name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      ({model.provider})
+                    </span>
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm text-foreground truncate">
-                        {model.display_name}
-                      </span>
-                      <span className="text-xs text-muted-foreground">({model.provider})</span>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-1">
-                      <p className="text-xs text-muted-foreground">
-                        ${formatEther(BigInt(model.price_per_call))} per call
-                      </p>
-                      {!model.is_active && (
-                        <Badge variant="outline" className="text-xs bg-amber-500/20 border-muted/50">
-                          Unavailable
-                        </Badge>
-                      )}
-                    </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-muted-foreground">
+                      ${formatEther(BigInt(model.price_per_call))} per call
+                    </p>
+                    {!model.is_active && (
+                      <Badge
+                        variant="outline"
+                        className="text-xs bg-amber-500/20 border-muted/50"
+                      >
+                        Unavailable
+                      </Badge>
+                    )}
                   </div>
                 </div>
-              </SelectItem>
-            ))}
-          </div>
+              </div>
+            </SelectItem>
+          ))}
+        </div>
       </SelectContent>
     </Select>
   );
-} 
+}

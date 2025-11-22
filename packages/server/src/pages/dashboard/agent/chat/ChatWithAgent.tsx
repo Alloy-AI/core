@@ -1,22 +1,21 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { useParams } from "@tanstack/react-router";
+import { formatEther } from "viem";
+import Icon from "@/src/lib/components/custom/Icon";
 import { Button } from "@/src/lib/components/ui/button";
 import { Skeleton } from "@/src/lib/components/ui/skeleton";
-import Icon from "@/src/lib/components/custom/Icon";
-import { Link } from "@tanstack/react-router";
 import { useHaitheApi } from "@/src/lib/hooks/use-haithe-api";
-import { useStore, useChatStore } from "@/src/lib/hooks/use-store";
-import { useQueryClient } from "@tanstack/react-query";
-import ChatHeader from "./components/ChatHeader";
-import ChatArea from "./components/ChatArea";
-import ChatInput from "./components/ChatInput";
-import Layout from "../../layout";
-import { formatEther } from "viem";
+import { useChatStore, useStore } from "@/src/lib/hooks/use-store";
 import FundOrgDialog from "../../FundOrg";
+import Layout from "../../layout";
+import ChatArea from "./components/ChatArea";
+import ChatHeader from "./components/ChatHeader";
+import ChatInput from "./components/ChatInput";
 
 export default function ChatWithAgent() {
   const { id } = useParams({
-    from: '/dashboard/agents/$id/chat'
+    from: "/dashboard/agents/$id/chat",
   });
 
   const haithe = useHaitheApi();
@@ -25,10 +24,12 @@ export default function ChatWithAgent() {
   const queryClient = useQueryClient();
 
   console.log({
-    selectedOrg
-  })
+    selectedOrg,
+  });
 
-  const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<
+    number | null
+  >(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Get agent data
@@ -46,15 +47,15 @@ export default function ChatWithAgent() {
 
   // Get conversations for this agent
   const conversationsQuery = haithe.getConversations(
-    selectedOrg?.organization_uid || '',
-    agent?.project_uid || ''
+    selectedOrg?.organization_uid || "",
+    agent?.project_uid || "",
   );
 
   // Get messages for current conversation
   const messagesQuery = haithe.getConversationMessages(
     currentConversationId || 0,
-    selectedOrg?.organization_uid || '',
-    agent?.project_uid || ''
+    selectedOrg?.organization_uid || "",
+    agent?.project_uid || "",
   );
 
   // Create conversation mutation
@@ -84,29 +85,29 @@ export default function ChatWithAgent() {
       const res = await createMessageMutation.mutateAsync({
         conversationId: conversationId,
         message: content.trim(),
-        sender: 'user',
+        sender: "user",
         orgUid: selectedOrg.organization_uid,
         projectUid: agent.project_uid,
       });
 
       if (!selectedModel) {
-        throw new Error('No model selected');
+        throw new Error("No model selected");
       }
 
       // Get message history for context (last 10 messages)
       const messageHistory = messagesQuery.data || [];
       const recentMessages = messageHistory.slice(-10); // Get last 10 messages
-      
+
       // Convert message history to OpenAI format
-      const messagesForCompletion = recentMessages.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.message
+      const messagesForCompletion = recentMessages.map((msg) => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: msg.message,
       }));
 
       // Add the current user message
       messagesForCompletion.push({
-        role: 'user',
-        content: content.trim()
+        role: "user",
+        content: content.trim(),
       });
 
       // Get AI completion
@@ -116,8 +117,8 @@ export default function ChatWithAgent() {
         body: {
           model: selectedModel,
           messages: messagesForCompletion,
-          temperature: 1
-        }
+          temperature: 1,
+        },
       });
 
       // Send the AI response as a message
@@ -126,7 +127,7 @@ export default function ChatWithAgent() {
         await createMessageMutation.mutateAsync({
           conversationId: conversationId,
           message: aiResponse,
-          sender: 'ai',
+          sender: "ai",
           orgUid: selectedOrg.organization_uid,
           projectUid: agent.project_uid,
         });
@@ -134,14 +135,22 @@ export default function ChatWithAgent() {
 
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({
-        queryKey: ['conversationMessages', conversationId, selectedOrg.organization_uid, agent.project_uid]
+        queryKey: [
+          "conversationMessages",
+          conversationId,
+          selectedOrg.organization_uid,
+          agent.project_uid,
+        ],
       });
       queryClient.invalidateQueries({
-        queryKey: ['conversations', selectedOrg.organization_uid, agent.project_uid]
+        queryKey: [
+          "conversations",
+          selectedOrg.organization_uid,
+          agent.project_uid,
+        ],
       });
-
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
     } finally {
       setIsLoading(false);
     }
@@ -160,27 +169,32 @@ export default function ChatWithAgent() {
   };
 
   // Transform API data to component format
-  const messages = messagesQuery.data?.map(msg => ({
-    id: msg.id.toString(),
-    content: msg.message,
-    isUser: msg.sender === 'user',
-    timestamp: new Date(msg.created_at)
-  })) || [];
+  const messages =
+    messagesQuery.data?.map((msg) => ({
+      id: msg.id.toString(),
+      content: msg.message,
+      isUser: msg.sender === "user",
+      timestamp: new Date(msg.created_at),
+    })) || [];
 
-  const conversations = conversationsQuery.data?.map(conv => ({
-    id: conv.id.toString(),
-    title: conv.title || 'New Conversation',
-    lastMessage: 'No messages yet', // API doesn't provide this field
-    timestamp: new Date(conv.updated_at || conv.created_at),
-    messageCount: 0, // API doesn't provide this field
-    messages: [] // We don't need to load all messages here
-  })) || [];
+  const conversations =
+    conversationsQuery.data?.map((conv) => ({
+      id: conv.id.toString(),
+      title: conv.title || "New Conversation",
+      lastMessage: "No messages yet", // API doesn't provide this field
+      timestamp: new Date(conv.updated_at || conv.created_at),
+      messageCount: 0, // API doesn't provide this field
+      messages: [], // We don't need to load all messages here
+    })) || [];
 
   // Check if any models are enabled
-  const hasEnabledModels = enabledModelsQuery.data && enabledModelsQuery.data.length > 0;
+  const hasEnabledModels =
+    enabledModelsQuery.data && enabledModelsQuery.data.length > 0;
 
   // Get the selected model's price per call
-  const selectedModelData = enabledModelsQuery.data?.find((model) => model.name === selectedModel);
+  const selectedModelData = enabledModelsQuery.data?.find(
+    (model) => model.name === selectedModel,
+  );
   const modelPricePerCall = selectedModelData?.price_per_call || 0;
 
   // Get the total price per call for all enabled products of this agent
@@ -191,7 +205,8 @@ export default function ChatWithAgent() {
   const organizationBalance = balanceQuery.data?.balance || 0;
 
   // Check if balance is sufficient for the total price per call
-  const hasSufficientBalance = organizationBalance !== 0 && organizationBalance >= totalPricePerCall
+  const hasSufficientBalance =
+    organizationBalance !== 0 && organizationBalance >= totalPricePerCall;
 
   // Loading state
   if (agentsQuery.isPending) {
@@ -215,11 +230,15 @@ export default function ChatWithAgent() {
       <Layout>
         <div className="min-h-full bg-background flex items-center justify-center p-4">
           <div className="text-center space-y-4 max-w-md w-full">
-            <Icon name="Bot" className="size-16 text-muted-foreground mx-auto" />
+            <Icon
+              name="Bot"
+              className="size-16 text-muted-foreground mx-auto"
+            />
             <div className="space-y-2">
               <h3 className="text-xl font-medium">Agent Not Found</h3>
               <p className="text-muted-foreground">
-                The agent you're looking for doesn't exist or you don't have access to it.
+                The agent you're looking for doesn't exist or you don't have
+                access to it.
               </p>
             </div>
             <Button asChild>
@@ -240,7 +259,7 @@ export default function ChatWithAgent() {
             id: agent.id.toString(),
             name: agent.name,
             description: undefined,
-            status: 'online'
+            status: "online",
           }}
           conversations={conversations}
           currentConversationId={currentConversationId?.toString()}
@@ -262,13 +281,17 @@ export default function ChatWithAgent() {
           {!hasEnabledModels && enabledModelsQuery.data !== undefined && (
             <div className="mb-10 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-start gap-3">
-                <Icon name="TriangleAlert" className="size-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <Icon
+                  name="TriangleAlert"
+                  className="size-5 text-yellow-600 mt-0.5 flex-shrink-0"
+                />
                 <div className="flex-1">
                   <h4 className="text-sm font-medium text-yellow-800">
                     No models enabled
                   </h4>
                   <p className="text-sm text-yellow-700 mt-1">
-                    Your organization needs to enable at least one model to chat with your agent.
+                    Your organization needs to enable at least one model to chat
+                    with your agent.
                     <Link
                       to="/dashboard/settings"
                       className="text-yellow-800 underline hover:text-yellow-900 ml-1"
@@ -282,24 +305,37 @@ export default function ChatWithAgent() {
           )}
 
           {/* Warning when balance is insufficient */}
-          {hasEnabledModels && !hasSufficientBalance && balanceQuery.data !== undefined && selectedModel && (
-            <div className="mb-10 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Icon name="TriangleAlert" className="size-5 text-red-600 mt-0.5 flex-shrink-0" />
-                <div className="flex items-center justify-between w-full gap-10">
-                  <div>
-                    <h4 className="text-sm font-medium text-red-800">
-                      Insufficient balance
-                    </h4>
-                    <p className="text-sm text-red-700 mt-1">
-                      Your organization balance (${formatEther(BigInt(organizationBalance))}) is insufficient for the total cost per call.
-                    </p>
+          {hasEnabledModels &&
+            !hasSufficientBalance &&
+            balanceQuery.data !== undefined &&
+            selectedModel && (
+              <div className="mb-10 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Icon
+                    name="TriangleAlert"
+                    className="size-5 text-red-600 mt-0.5 flex-shrink-0"
+                  />
+                  <div className="flex items-center justify-between w-full gap-10">
+                    <div>
+                      <h4 className="text-sm font-medium text-red-800">
+                        Insufficient balance
+                      </h4>
+                      <p className="text-sm text-red-700 mt-1">
+                        Your organization balance ($
+                        {formatEther(BigInt(organizationBalance))}) is
+                        insufficient for the total cost per call.
+                      </p>
+                    </div>
+                    {selectedOrg && (
+                      <FundOrgDialog
+                        organization={selectedOrg}
+                        refetchBalance={balanceQuery.refetch}
+                      />
+                    )}
                   </div>
-                  {selectedOrg && <FundOrgDialog organization={selectedOrg} refetchBalance={balanceQuery.refetch} />}
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Input Area */}
           <ChatInput
@@ -312,4 +348,4 @@ export default function ChatWithAgent() {
       </div>
     </Layout>
   );
-} 
+}

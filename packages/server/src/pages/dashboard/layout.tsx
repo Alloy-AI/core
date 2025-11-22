@@ -2,11 +2,7 @@ import ThemeSwitch from "@/src/lib/components/custom/ThemeSwitch";
 import Navbar from "./nav";
 import Sidebar from "./Sidebar";
 
-export default function Layout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background [--navbar-height:5rem] sm:[--sidebar-width:16rem]">
       {/* Navbar Container - Height preserved for layout spacing */}
@@ -26,5 +22,5 @@ export default function Layout({
         <ThemeSwitch />
       </div>
     </div>
-  )
+  );
 }

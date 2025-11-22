@@ -8,11 +8,13 @@ import type { BaseMime } from "hono/utils/mime";
 import type { JSONObject } from "hono/utils/types";
 
 export const respond = {
-  ok: function <
-    C extends Context,
-    T extends JSONObject,
-    U extends 200 | 201 | 202,
-  >(ctx: C, data: T, message: string, status: U, headers?: HeaderRecord) {
+  ok: <C extends Context, T extends JSONObject, U extends 200 | 201 | 202>(
+    ctx: C,
+    data: T,
+    message: string,
+    status: U,
+    headers?: HeaderRecord,
+  ) => {
     ctx.status(status);
     for (const [name, value] of Object.entries(headers || {})) {
       ctx.header(name, value);
@@ -20,10 +22,15 @@ export const respond = {
     return ctx.json({ success: true, data, message });
   },
 
-  err: function <
+  err: <
     C extends Context,
     U extends ClientErrorStatusCode | ServerErrorStatusCode,
-  >(ctx: C, message: string, status: U, headers?: HeaderRecord) {
+  >(
+    ctx: C,
+    message: string,
+    status: U,
+    headers?: HeaderRecord,
+  ) => {
     ctx.status(status);
     for (const [name, value] of Object.entries(headers || {})) {
       ctx.header(name, value);

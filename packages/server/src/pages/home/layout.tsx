@@ -1,11 +1,7 @@
-import Navbar from "@/src/pages/home/nav";
 import ThemeSwitch from "@/src/lib/components/custom/ThemeSwitch";
+import Navbar from "@/src/pages/home/nav";
 
-export default function Layout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-background [--navbar-height:5rem] sm:[--sidebar-width:0rem]">
       <div className="h-[var(--navbar-height)] border-b-4 border-black">
@@ -20,5 +16,5 @@ export default function Layout({
         <ThemeSwitch />
       </div>
     </div>
-  )
+  );
 }

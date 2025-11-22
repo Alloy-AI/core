@@ -1,6 +1,6 @@
-import { useRef, useEffect } from "react";
-import ChatMessage from "./ChatMessage";
+import { useEffect, useRef } from "react";
 import ChatLoading from "./ChatLoading";
+import ChatMessage from "./ChatMessage";
 import ChatWelcome from "./ChatWelcome";
 
 interface ChatAreaProps {
@@ -19,7 +19,7 @@ export default function ChatArea({
   messages,
   isLoading,
   agentName,
-  onPromptClick
+  onPromptClick,
 }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -48,4 +48,4 @@ export default function ChatArea({
       <div ref={messagesEndRef} />
     </div>
   );
-} 
+}

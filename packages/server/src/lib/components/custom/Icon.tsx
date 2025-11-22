@@ -1,5 +1,5 @@
 import { icons } from "lucide-react";
-import React from "react";
+import type React from "react";
 
 interface IIconProps {
   name: keyof typeof icons;

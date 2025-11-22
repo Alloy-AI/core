@@ -1,21 +1,32 @@
+import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { Button } from "@/src/lib/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/lib/components/ui/card";
-import { Switch } from "@/src/lib/components/ui/switch";
-import { Label } from "@/src/lib/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/lib/components/ui/select";
-import { Separator } from "@/src/lib/components/ui/separator";
-import { Badge } from "@/src/lib/components/ui/badge";
 import Icon from "@/src/lib/components/custom/Icon";
-import { Link } from "@tanstack/react-router";
-import { useParams } from "@tanstack/react-router";
+import { Badge } from "@/src/lib/components/ui/badge";
+import { Button } from "@/src/lib/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/lib/components/ui/card";
+import { Label } from "@/src/lib/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/lib/components/ui/select";
+import { Separator } from "@/src/lib/components/ui/separator";
+import { Skeleton } from "@/src/lib/components/ui/skeleton";
+import { Switch } from "@/src/lib/components/ui/switch";
 import { useHaitheApi } from "@/src/lib/hooks/use-haithe-api";
 import { useStore } from "@/src/lib/hooks/use-store";
-import { Skeleton } from "@/src/lib/components/ui/skeleton";
 
 export default function ChatSettings() {
   const { id } = useParams({
-    from: '/dashboard/agents/$id/chat/settings'
+    from: "/dashboard/agents/$id/chat/settings",
   });
 
   const haithe = useHaitheApi();
@@ -31,12 +42,12 @@ export default function ChatSettings() {
     soundNotifications: true,
     typingIndicator: true,
     messageHistory: 100,
-    theme: 'system' as 'light' | 'dark' | 'system',
-    language: 'en' as string
+    theme: "system" as "light" | "dark" | "system",
+    language: "en" as string,
   });
 
   const handleSettingChange = (key: string, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   if (agentsQuery.isPending) {
@@ -63,7 +74,8 @@ export default function ChatSettings() {
           <div className="space-y-2">
             <h3 className="text-xl font-medium">Agent Not Found</h3>
             <p className="text-muted-foreground">
-              The agent you're looking for doesn't exist or you don't have access to it.
+              The agent you're looking for doesn't exist or you don't have
+              access to it.
             </p>
           </div>
           <Button asChild>
@@ -86,9 +98,7 @@ export default function ChatSettings() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link to={`/dashboard/agents/${id}/chat`}>
-              Back to Chat
-            </Link>
+            <Link to={`/dashboard/agents/${id}/chat`}>Back to Chat</Link>
           </Button>
           <Button>Save Settings</Button>
         </div>
@@ -116,7 +126,9 @@ export default function ChatSettings() {
               </div>
               <Switch
                 checked={settings.autoScroll}
-                onCheckedChange={(checked) => handleSettingChange('autoScroll', checked)}
+                onCheckedChange={(checked) =>
+                  handleSettingChange("autoScroll", checked)
+                }
               />
             </div>
 
@@ -131,7 +143,9 @@ export default function ChatSettings() {
               </div>
               <Switch
                 checked={settings.soundNotifications}
-                onCheckedChange={(checked) => handleSettingChange('soundNotifications', checked)}
+                onCheckedChange={(checked) =>
+                  handleSettingChange("soundNotifications", checked)
+                }
               />
             </div>
 
@@ -146,7 +160,9 @@ export default function ChatSettings() {
               </div>
               <Switch
                 checked={settings.typingIndicator}
-                onCheckedChange={(checked) => handleSettingChange('typingIndicator', checked)}
+                onCheckedChange={(checked) =>
+                  handleSettingChange("typingIndicator", checked)
+                }
               />
             </div>
           </CardContent>
@@ -166,7 +182,10 @@ export default function ChatSettings() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label>Theme</Label>
-              <Select value={settings.theme} onValueChange={(value) => handleSettingChange('theme', value)}>
+              <Select
+                value={settings.theme}
+                onValueChange={(value) => handleSettingChange("theme", value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -182,7 +201,12 @@ export default function ChatSettings() {
 
             <div className="space-y-2">
               <Label>Language</Label>
-              <Select value={settings.language} onValueChange={(value) => handleSettingChange('language', value)}>
+              <Select
+                value={settings.language}
+                onValueChange={(value) =>
+                  handleSettingChange("language", value)
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -199,9 +223,11 @@ export default function ChatSettings() {
 
             <div className="space-y-2">
               <Label>Message History Limit</Label>
-              <Select 
-                value={settings.messageHistory.toString()} 
-                onValueChange={(value) => handleSettingChange('messageHistory', parseInt(value))}
+              <Select
+                value={settings.messageHistory.toString()}
+                onValueChange={(value) =>
+                  handleSettingChange("messageHistory", parseInt(value))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -224,9 +250,7 @@ export default function ChatSettings() {
               <Icon name="Bot" className="size-5" />
               Agent Information
             </CardTitle>
-            <CardDescription>
-              Details about your AI agent
-            </CardDescription>
+            <CardDescription>Details about your AI agent</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
@@ -253,7 +277,9 @@ export default function ChatSettings() {
                 <span className="text-sm font-mono">{agent.id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Project UID</span>
+                <span className="text-sm text-muted-foreground">
+                  Project UID
+                </span>
                 <span className="text-sm font-mono">{agent.project_uid}</span>
               </div>
             </div>
@@ -274,7 +300,8 @@ export default function ChatSettings() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Your chat conversations are stored securely and can be managed here.
+                Your chat conversations are stored securely and can be managed
+                here.
               </p>
             </div>
 
@@ -285,7 +312,10 @@ export default function ChatSettings() {
                 <Icon name="Download" className="size-4 mr-2" />
                 Export Chat History
               </Button>
-              <Button variant="outline" className="w-full justify-start text-destructive">
+              <Button
+                variant="outline"
+                className="w-full justify-start text-destructive"
+              >
                 <Icon name="Trash2" className="size-4 mr-2" />
                 Clear Chat History
               </Button>
@@ -295,4 +325,4 @@ export default function ChatSettings() {
       </div>
     </div>
   );
-} 
+}

@@ -31,18 +31,18 @@ export const safeMap = <T, R>(
 
 export function isZodError(err: unknown): err is ZodError {
   return Boolean(
-    err && (err instanceof ZodError || (err as ZodError).name === 'ZodError'),
+    err && (err instanceof ZodError || (err as ZodError).name === "ZodError"),
   );
 }
 
 export function handleError(error: unknown) {
-  if(isZodError(error)) {
-    console.error(error.issues.map((issue) => issue.message).join(', '));
-    toast.error(`${error.issues.map((issue) => issue.message).join(', ')}`);
+  if (isZodError(error)) {
+    console.error(error.issues.map((issue) => issue.message).join(", "));
+    toast.error(`${error.issues.map((issue) => issue.message).join(", ")}`);
     return;
   }
 
-  if(error instanceof Error) {  
+  if (error instanceof Error) {
     console.error(error.message);
     toast.error(error.message);
     return;

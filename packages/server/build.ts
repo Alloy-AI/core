@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { build, type BuildConfig } from "bun";
+import { type BuildConfig, build } from "bun";
 import plugin from "bun-plugin-tailwind";
 import { existsSync } from "fs";
-import { rm, cp } from "fs/promises";
+import { cp, rm } from "fs/promises";
 import path from "path";
 
 // Print help text if requested
@@ -37,7 +37,7 @@ Example:
 
 // Helper function to convert kebab-case to camelCase
 const toCamelCase = (str: string): string => {
-  return str.replace(/-([a-z])/g, g => g[1].toUpperCase());
+  return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 };
 
 // Helper function to parse a value into appropriate type
@@ -51,7 +51,7 @@ const parseValue = (value: string): any => {
   if (/^\d*\.\d+$/.test(value)) return parseFloat(value);
 
   // Handle arrays (comma-separated)
-  if (value.includes(",")) return value.split(",").map(v => v.trim());
+  if (value.includes(",")) return value.split(",").map((v) => v.trim());
 
   // Default to string
   return value;
@@ -65,9 +65,9 @@ async function getEnvKeys(): Promise<string[]> {
     const match = content.match(/const envKeys = \[([\s\S]*?)\] as const;/);
     if (match && match[1]) {
       const keys = match[1]
-        .split('\n')
-        .map(line => line.trim().replace(/[",]/g, ''))
-        .filter(line => line.length > 0);
+        .split("\n")
+        .map((line) => line.trim().replace(/[",]/g, ""))
+        .filter((line) => line.length > 0);
       return keys;
     }
   } catch (error) {
@@ -93,7 +93,10 @@ function parseArgs(): Partial<BuildConfig> {
     }
 
     // Handle --flag (boolean true)
-    if (!arg.includes("=") && (i === args.length - 1 || args[i + 1].startsWith("--"))) {
+    if (
+      !arg.includes("=") &&
+      (i === args.length - 1 || args[i + 1].startsWith("--"))
+    ) {
       const key = toCamelCase(arg.slice(2));
       config[key] = true;
       continue;
@@ -157,13 +160,17 @@ console.log("\n🚀 Starting build process...\n");
 
   // Scan for all HTML files in the project
   const entrypoints = Array.from(new Bun.Glob("**.html").scanSync("src"))
-    .map(a => path.resolve("src", a))
-    .filter(dir => !dir.includes("node_modules"));
-  console.log(`📄 Found ${entrypoints.length} HTML ${entrypoints.length === 1 ? "file" : "files"} to process\n`);
+    .map((a) => path.resolve("src", a))
+    .filter((dir) => !dir.includes("node_modules"));
+  console.log(
+    `📄 Found ${entrypoints.length} HTML ${entrypoints.length === 1 ? "file" : "files"} to process\n`,
+  );
 
   // ENV VARIABLES SUBSTITUTION FOR BROWSER
   const allEnvKeys = await getEnvKeys();
-  const clientEnvVariables = allEnvKeys.filter(key => key.startsWith("BUN_PUBLIC_"));
+  const clientEnvVariables = allEnvKeys.filter((key) =>
+    key.startsWith("BUN_PUBLIC_"),
+  );
 
   const defineEnv: Record<string, string> = {
     "process.env.NODE_ENV": JSON.stringify("production"),
@@ -173,7 +180,9 @@ console.log("\n🚀 Starting build process...\n");
     if (process.env[envKey] !== undefined) {
       defineEnv[`process.env.${envKey}`] = JSON.stringify(process.env[envKey]);
     } else {
-      console.warn(`⚠️ Warning: Environment variable ${envKey} is not set. It will be defined as undefined in the client bundle.`);
+      console.warn(
+        `⚠️ Warning: Environment variable ${envKey} is not set. It will be defined as undefined in the client bundle.`,
+      );
       defineEnv[`process.env.${envKey}`] = JSON.stringify(undefined);
     }
   }
@@ -193,10 +202,10 @@ console.log("\n🚀 Starting build process...\n");
   // Print the results
   const end = performance.now();
 
-  const outputTable = result.outputs.map(output => ({
-    "File": path.relative(process.cwd(), output.path),
-    "Type": output.kind,
-    "Size": formatFileSize(output.size),
+  const outputTable = result.outputs.map((output) => ({
+    File: path.relative(process.cwd(), output.path),
+    Type: output.kind,
+    Size: formatFileSize(output.size),
   }));
 
   console.table(outputTable);

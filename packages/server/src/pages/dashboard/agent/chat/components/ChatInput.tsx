@@ -1,7 +1,7 @@
 import { useState } from "react";
+import Icon from "@/src/lib/components/custom/Icon";
 import { Button } from "@/src/lib/components/ui/button";
 import { Textarea } from "@/src/lib/components/ui/textarea";
-import Icon from "@/src/lib/components/custom/Icon";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -10,11 +10,11 @@ interface ChatInputProps {
   isLoading?: boolean;
 }
 
-export default function ChatInput({ 
-  onSendMessage, 
-  placeholder = "Type your message...", 
+export default function ChatInput({
+  onSendMessage,
+  placeholder = "Type your message...",
   disabled = false,
-  isLoading = false 
+  isLoading = false,
 }: ChatInputProps) {
   const [inputValue, setInputValue] = useState("");
 
@@ -25,7 +25,7 @@ export default function ChatInput({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -57,4 +57,4 @@ export default function ChatInput({
       </div>
     </div>
   );
-} 
+}

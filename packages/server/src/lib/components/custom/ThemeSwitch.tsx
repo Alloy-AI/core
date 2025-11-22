@@ -1,6 +1,6 @@
-import { Button } from "../ui/button";
-import { useTheme } from "@/src/lib/context/theme-provider";
 import { motion } from "motion/react";
+import { useTheme } from "@/src/lib/context/theme-provider";
+import { Button } from "../ui/button";
 import Icon from "./Icon";
 
 export default function ThemeSwitch() {

@@ -22,6 +22,6 @@ export const useStorePersist = create<StorePersist>()(
       bears: 0,
       setBears: (bears: number) => set({ bears }),
     }),
-    { name: "zustand" }
-  )
+    { name: "zustand" },
+  ),
 );

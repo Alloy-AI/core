@@ -104,12 +104,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-const withErrorBoundary = <P extends {}>(Component: React.ComponentType<P>) => (props: P) =>
-  (
+const withErrorBoundary =
+  <P extends {}>(Component: React.ComponentType<P>) =>
+  (props: P) => (
     <ErrorBoundary>
       <Component {...props} />
     </ErrorBoundary>
   );
 
 export { ErrorBoundary, withErrorBoundary };
-

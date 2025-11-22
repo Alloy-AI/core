@@ -1,17 +1,17 @@
-import { Button } from "@/src/lib/components/ui/button";
-import { Badge } from "@/src/lib/components/ui/badge";
-import Icon from "@/src/lib/components/custom/Icon";
 import { Link } from "@tanstack/react-router";
+import { formatEther } from "viem";
+import Icon from "@/src/lib/components/custom/Icon";
+import { Badge } from "@/src/lib/components/ui/badge";
+import { Button } from "@/src/lib/components/ui/button";
 import ChatHistory from "./ChatHistory";
 import ModelSelector from "./ModelSelector";
-import { formatEther } from "viem";
 
 interface ChatHeaderProps {
   agent: {
     id: string;
     name: string;
     description?: string;
-    status?: 'online' | 'offline' | 'busy';
+    status?: "online" | "offline" | "busy";
   };
   conversations: any[];
   currentConversationId?: string;
@@ -26,37 +26,36 @@ export default function ChatHeader({
   currentConversationId,
   onSelectConversation,
   onNewConversation,
-  balance
+  balance,
 }: ChatHeaderProps) {
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case 'online':
-        return 'bg-green-500';
-      case 'busy':
-        return 'bg-yellow-500';
-      case 'offline':
-        return 'bg-gray-500';
+      case "online":
+        return "bg-green-500";
+      case "busy":
+        return "bg-yellow-500";
+      case "offline":
+        return "bg-gray-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
   const getStatusText = (status?: string) => {
     switch (status) {
-      case 'online':
-        return 'Online';
-      case 'busy':
-        return 'Busy';
-      case 'offline':
-        return 'Offline';
+      case "online":
+        return "Online";
+      case "busy":
+        return "Busy";
+      case "offline":
+        return "Offline";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   };
 
   return (
     <div className="border-b sticky top-20 z-50 border-border/50 px-4 py-3 flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-
       <div className="items-center gap-3 hidden md:flex">
         <Button variant="ghost" asChild>
           <Link to="/dashboard/agents/$id" params={{ id: agent.id }}>
@@ -68,7 +67,9 @@ export default function ChatHeader({
             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
               <Icon name="Bot" className="size-4 text-primary" />
             </div>
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background ${getStatusColor(agent.status)}`} />
+            <div
+              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background ${getStatusColor(agent.status)}`}
+            />
           </div>
           <div>
             <h2 className="font-semibold text-sm">{agent.name}</h2>
@@ -98,4 +99,4 @@ export default function ChatHeader({
       </div>
     </div>
   );
-} 
+}

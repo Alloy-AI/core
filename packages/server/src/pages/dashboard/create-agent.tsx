@@ -1,8 +1,16 @@
-import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/src/lib/components/ui/button";
+import { ArrowLeftIcon, RobotIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/src/lib/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/lib/components/ui/card";
 import {
   Form,
   FormControl,
@@ -13,9 +21,6 @@ import {
   FormMessage,
 } from "@/src/lib/components/ui/form";
 import { Input } from "@/src/lib/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/lib/components/ui/card";
-import { RobotIcon, ArrowLeftIcon } from "@phosphor-icons/react";
-import { toast } from "sonner";
 
 // Define the schema for the agent form
 const agentFormSchema = z.object({
@@ -44,19 +49,26 @@ export default function CreateAgentPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-2xl space-y-8 relative">
-        
         <div className="absolute -top-16 left-0">
-            <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground pl-0 gap-2">
-                <Link to="/dashboard">
-                    <ArrowLeftIcon className="size-4" />
-                    Back to Dashboard
-                </Link>
-            </Button>
+          <Button
+            variant="ghost"
+            asChild
+            className="text-muted-foreground hover:text-foreground pl-0 gap-2"
+          >
+            <Link to="/dashboard">
+              <ArrowLeftIcon className="size-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
         </div>
 
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-1">Create New Agent</h1>
-          <p className="text-muted-foreground">Configure your new autonomous agent.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-1">
+            Create New Agent
+          </h1>
+          <p className="text-muted-foreground">
+            Configure your new autonomous agent.
+          </p>
         </div>
 
         <Card className="bg-background/40 backdrop-blur-md border-border">
@@ -68,7 +80,10 @@ export default function CreateAgentPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 <FormField
                   control={form.control}
                   name="name"
@@ -76,7 +91,11 @@ export default function CreateAgentPage() {
                     <FormItem>
                       <FormLabel className="text-foreground">Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Trading Bot Alpha" {...field} className="bg-muted/30 border-border text-foreground placeholder:text-muted-foreground focus-visible:border-primary" />
+                        <Input
+                          placeholder="e.g., Trading Bot Alpha"
+                          {...field}
+                          className="bg-muted/30 border-border text-foreground placeholder:text-muted-foreground focus-visible:border-primary"
+                        />
                       </FormControl>
                       <FormDescription>
                         This is the public display name of your agent.
@@ -91,13 +110,15 @@ export default function CreateAgentPage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-foreground">Description</FormLabel>
+                      <FormLabel className="text-foreground">
+                        Description
+                      </FormLabel>
                       <FormControl>
-                         <textarea
-                            className="flex min-h-[80px] w-full rounded-md border border-border bg-muted/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-foreground focus-visible:border-primary"
-                            placeholder="Describe what this agent does..."
-                            {...field}
-                         />
+                        <textarea
+                          className="flex min-h-[80px] w-full rounded-md border border-border bg-muted/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-foreground focus-visible:border-primary"
+                          placeholder="Describe what this agent does..."
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

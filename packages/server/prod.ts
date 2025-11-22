@@ -1,9 +1,9 @@
-import hono from "./api";
-import path from "path";
 import { serve } from "bun";
 import { existsSync, statSync } from "fs";
-import { getMimeType } from "./utils";
+import path from "path";
+import hono from "./api";
 import { env } from "./env";
+import { getMimeType } from "./utils";
 
 const server = serve({
   development: false,
@@ -14,7 +14,7 @@ const server = serve({
       JSON.stringify({
         message: "Bun Server",
         version: "v1.0.0",
-      })
+      }),
     ),
     // CATCHES ONLY GET REQUEST
     "/api/v1/*": (req) => {
@@ -57,7 +57,7 @@ const server = serve({
             },
           });
         }
-        
+
         const file = Bun.file(filePath);
         const mimeType = getMimeType(filePath);
 
@@ -78,11 +78,11 @@ const server = serve({
         // try serving them from the root of dist (for SPA routing)
         const fileName = path.basename(pathname);
         const rootFilePath = path.join(import.meta.dir, "dist", fileName);
-        
+
         if (existsSync(rootFilePath)) {
           const file = Bun.file(rootFilePath);
           const mimeType = getMimeType(rootFilePath);
-          
+
           return new Response(file, {
             headers: {
               "Content-Type": mimeType,
@@ -90,7 +90,7 @@ const server = serve({
             },
           });
         }
-        
+
         // If the file doesn't exist even at the root, return 404
         return new Response("Not Found", { status: 404 });
       }
@@ -117,9 +117,10 @@ const server = serve({
     const pathname = url.pathname;
 
     if (!pathname.startsWith("/api")) {
-      const normalizedPath = pathname.endsWith("/") && pathname !== "/"
-        ? pathname.slice(0, -1)
-        : pathname;
+      const normalizedPath =
+        pathname.endsWith("/") && pathname !== "/"
+          ? pathname.slice(0, -1)
+          : pathname;
 
       const filePath = path.join(import.meta.dir, "dist", normalizedPath);
 
@@ -141,11 +142,11 @@ const server = serve({
         // try serving them from the root of dist (for SPA routing)
         const fileName = path.basename(pathname);
         const rootFilePath = path.join(import.meta.dir, "dist", fileName);
-        
+
         if (existsSync(rootFilePath)) {
           const file = Bun.file(rootFilePath);
           const mimeType = getMimeType(rootFilePath);
-          
+
           return new Response(file, {
             headers: {
               "Content-Type": mimeType,
@@ -153,7 +154,7 @@ const server = serve({
             },
           });
         }
-        
+
         // If the file doesn't exist even at the root, return 404
         return new Response("Not Found", { status: 404 });
       }

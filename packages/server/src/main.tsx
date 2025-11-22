@@ -1,15 +1,15 @@
-import { createRoot } from "react-dom/client";
+import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
-import { ThemeProvider } from "./lib/context/theme-provider";
+import { createRoot } from "react-dom/client";
+import { Toaster } from "sonner";
 import { ErrorBoundary } from "./lib/components/errors/ErrorBoundary";
 import { QueryClientProvider } from "./lib/context/query-client";
+import { ThemeProvider } from "./lib/context/theme-provider";
 import router from "./pages/app";
-import { Toaster } from "sonner";
-import { RouterProvider } from "@tanstack/react-router";
 import "./globals.css";
+import { IconContext } from "@phosphor-icons/react";
 import { PrivyProvider } from "./lib/context/privy-provider";
 import { WagmiProvider } from "./lib/context/wagmi-provider";
-import { IconContext } from "@phosphor-icons/react";
 
 // Root element
 const rootElement = document.getElementById("root")!;

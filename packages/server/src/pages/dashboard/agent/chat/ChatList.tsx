@@ -1,14 +1,20 @@
+import { Link } from "@tanstack/react-router";
+import { Bot, MessageSquare, Plus, Search } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/src/lib/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/lib/components/ui/card";
+import Icon from "@/src/lib/components/custom/Icon";
 import { Badge } from "@/src/lib/components/ui/badge";
+import { Button } from "@/src/lib/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/lib/components/ui/card";
 import { Input } from "@/src/lib/components/ui/input";
 import { Skeleton } from "@/src/lib/components/ui/skeleton";
-import Icon from "@/src/lib/components/custom/Icon";
-import { Link } from "@tanstack/react-router";
 import { useHaitheApi } from "@/src/lib/hooks/use-haithe-api";
 import { useStore } from "@/src/lib/hooks/use-store";
-import { Search, Plus, Bot, MessageSquare } from "lucide-react";
 
 export default function ChatList() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,10 +24,12 @@ export default function ChatList() {
   // Get agents data
   const agentsQuery = haithe.getProjects(Number(selectedOrg?.id));
 
-  const filteredAgents = agentsQuery.data?.filter(agent =>
-    agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    agent.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredAgents =
+    agentsQuery.data?.filter(
+      (agent) =>
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+    ) || [];
 
   if (agentsQuery.isPending) {
     return (
@@ -77,7 +85,9 @@ export default function ChatList() {
           <div className="space-y-2">
             <h3 className="text-lg font-medium">No agents found</h3>
             <p className="text-muted-foreground">
-              {searchQuery ? "Try adjusting your search terms" : "Create your first agent to get started"}
+              {searchQuery
+                ? "Try adjusting your search terms"
+                : "Create your first agent to get started"}
             </p>
           </div>
           {!searchQuery && (
@@ -92,7 +102,10 @@ export default function ChatList() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAgents.map((agent) => (
-            <Card key={agent.id} className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card
+              key={agent.id}
+              className="hover:shadow-md transition-shadow cursor-pointer"
+            >
               <Link to={`/dashboard/agents/${agent.id}/chat`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -125,4 +138,4 @@ export default function ChatList() {
       )}
     </div>
   );
-} 
+}

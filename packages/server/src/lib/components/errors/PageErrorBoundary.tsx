@@ -1,9 +1,9 @@
-import React from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ErrorBoundary } from "./ErrorBoundary";
-import { Button } from "../ui/button";
-import ThemeSwitch from "../custom/ThemeSwitch";
+import type React from "react";
 import Icon from "../custom/Icon";
+import ThemeSwitch from "../custom/ThemeSwitch";
+import { Button } from "../ui/button";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 interface PageErrorBoundaryProps {
   children: React.ReactNode;
@@ -75,9 +75,14 @@ const DefaultErrorFallback = () => {
               Reload Page
             </Button>
 
-            <Button onClick={() => navigate({
-              to: "/",
-            })} variant="outline">
+            <Button
+              onClick={() =>
+                navigate({
+                  to: "/",
+                })
+              }
+              variant="outline"
+            >
               <Icon name="House" />
               Go Back
             </Button>
@@ -100,11 +105,12 @@ const PageErrorBoundary: React.FC<PageErrorBoundaryProps> = ({ children }) => {
   );
 };
 
-const withPageErrorBoundary = <P extends {}>(Component: React.ComponentType<P>) => (props: P) =>
-(
-  <PageErrorBoundary>
-    <Component {...props} />
-  </PageErrorBoundary>
-);
+const withPageErrorBoundary =
+  <P extends {}>(Component: React.ComponentType<P>) =>
+  (props: P) => (
+    <PageErrorBoundary>
+      <Component {...props} />
+    </PageErrorBoundary>
+  );
 
 export { PageErrorBoundary, withPageErrorBoundary };

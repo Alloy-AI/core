@@ -9,53 +9,53 @@ import { tryCatch } from "../utils/tryCatch";
 const WITH_CDN = true;
 
 export async function getOrCreateUserDataset(walletAddress: Address) {
-    const synapse = await Synapse.create({
-        privateKey: env.EVM_PRIVATE_KEY_SYNAPSE,
-        rpcURL: RPC_URLS.calibration.websocket,
-        withCDN: WITH_CDN,
-    });
+  const synapse = await Synapse.create({
+    privateKey: env.EVM_PRIVATE_KEY_SYNAPSE,
+    rpcURL: RPC_URLS.calibration.websocket,
+    withCDN: WITH_CDN,
+  });
 
-    const [existing] = await db
-        .select()
-        .from(db.schema.usersDatasets)
-        .where(eq(db.schema.usersDatasets.walletAddress, walletAddress));
+  const [existing] = await db
+    .select()
+    .from(db.schema.usersDatasets)
+    .where(eq(db.schema.usersDatasets.walletAddress, walletAddress));
 
-    if (existing) {
-        const ctx = await tryCatch(
-            synapse.storage.createContext({
-                dataSetId: existing.dataSetId,
-                providerAddress: existing.providerAddress,
-                metadata: { filosign_user: walletAddress },
-            }),
-        );
-
-        if (ctx.error) {
-            throw new Error(
-                "Fail to create synapse context for existing user dataset",
-                ctx.error,
-            );
-        }
-
-        return ctx.data;
-    }
-
+  if (existing) {
     const ctx = await tryCatch(
-        synapse.storage.createContext({
-            metadata: { filosign_user: walletAddress },
-        }),
+      synapse.storage.createContext({
+        dataSetId: existing.dataSetId,
+        providerAddress: existing.providerAddress,
+        metadata: { filosign_user: walletAddress },
+      }),
     );
 
     if (ctx.error) {
-        throw new Error("Fail to create synapse context for new user dataset");
-    }
-
-    if (ctx.data.dataSetId !== undefined) {
-        await db.insert(db.schema.usersDatasets).values({
-            walletAddress,
-            dataSetId: ctx.data.dataSetId,
-            providerAddress: ctx.data.provider.serviceProvider,
-        });
+      throw new Error(
+        "Fail to create synapse context for existing user dataset",
+        ctx.error,
+      );
     }
 
     return ctx.data;
+  }
+
+  const ctx = await tryCatch(
+    synapse.storage.createContext({
+      metadata: { filosign_user: walletAddress },
+    }),
+  );
+
+  if (ctx.error) {
+    throw new Error("Fail to create synapse context for new user dataset");
+  }
+
+  if (ctx.data.dataSetId !== undefined) {
+    await db.insert(db.schema.usersDatasets).values({
+      walletAddress,
+      dataSetId: ctx.data.dataSetId,
+      providerAddress: ctx.data.provider.serviceProvider,
+    });
+  }
+
+  return ctx.data;
 }
