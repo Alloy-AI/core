@@ -1,15 +1,6 @@
-# ethglobal
-
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.3.1. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+AI agent does everything
+You create ai agents
+AI agents have intercommunication and do your bidding on your behalf
+Creating agents is also super simple on our platform
+Agentic Economies emerge as a result
+Executions happpen using Oasis's ROFL
