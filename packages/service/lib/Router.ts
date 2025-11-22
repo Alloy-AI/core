@@ -1,4 +1,5 @@
 type RouteResponse = string | { body: string; status?: number; headers?: Record<string, string> };
+type RouteHandler = (ctx: Context) => RouteResponse | Promise<RouteResponse>;
 
 export class Context {
     req: Request;
@@ -25,26 +26,26 @@ export class Context {
 }
 
 export class Router {
-    private routes: Map<string, Map<string, (ctx: Context) => RouteResponse>> = new Map();
+    private routes: Map<string, Map<string, RouteHandler>> = new Map();
 
-    get(path: string, handler: (ctx: Context) => RouteResponse) {
+    get(path: string, handler: RouteHandler) {
         if (!this.routes.has('GET')) this.routes.set('GET', new Map());
         this.routes.get('GET')!.set(path, handler);
     }
 
-    post(path: string, handler: (ctx: Context) => RouteResponse) {
+    post(path: string, handler: RouteHandler) {
         if (!this.routes.has('POST')) this.routes.set('POST', new Map());
         this.routes.get('POST')!.set(path, handler);
     }
 
-    handle(req: Request): Response {
+    async handle(req: Request): Promise<Response> {
         const url = new URL(req.url);
         const methodRoutes = this.routes.get(req.method);
         if (methodRoutes) {
             const handler = methodRoutes.get(url.pathname);
             if (handler) {
                 const ctx = new Context(req);
-                const result = handler(ctx);
+                const result = await handler(ctx);
                 if (typeof result === 'string') {
                     return new Response(result);
                 } else {

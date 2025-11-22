@@ -1,3 +1,4 @@
+import z from "zod";
 import { appd } from "./lib/appd";
 import { Router } from "./lib/Router";
 
@@ -7,7 +8,12 @@ router.get('/app-id', (ctx) => {
     return ctx.ok({ appId: appd.getAppId() });
 });
 
-router.post('/agents', (ctx) => {
+router.post('/agents', async (ctx) => {
+    const rawBody = await ctx.req.json();
+    const parsedData = z.object({
+        name: z.string(),
+    })
+
     return ctx.ok({ status: 'ok' });
 })
 
