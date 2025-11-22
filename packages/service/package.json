@@ -1,5 +1,8 @@
 {
     "name": "@alloy/executor",
+    "scripts": {
+        "oasis:push": ""
+    },
     "dependencies": {
         "@oasisprotocol/rofl-client": "^0.1.2",
         "axios": "^1.13.2"
