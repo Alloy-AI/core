@@ -7,6 +7,10 @@ router.get('/app-id', (ctx) => {
     return ctx.ok({ appId: appd.getAppId() });
 });
 
+router.post('/agents', (ctx) => {
+    return ctx.ok({ status: 'ok' });
+})
+
 router.get('/agents/:id/pk', (ctx) => {
     return ctx.ok({ status: 'ok' });
 });

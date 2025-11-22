@@ -1,3 +1,5 @@
+import { Address } from "viem";
+
 export interface IAgent {
     generateResponse(args: { message: string, chatId?: string }): Promise<string>;
     registerNewChat(): Promise<string>;
@@ -19,7 +21,15 @@ export interface IAgent {
 
 type AgentDescriptor = {
     id: string;
-    name: string;
+
+    registration: {
+        type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+        name: string;
+        description: string;
+        image?: string;
+        endpoints: RegistrationEndpoint[];
+        registrations: ERC8004Registration[];
+    }
 
     baseSystemPrompt: string;
 
@@ -46,6 +56,28 @@ type AgentDescriptor = {
         connectionInfo: MCPConnectionInfo;
         enabled: boolean;
     }[];
+}
+
+type EIP155Address = `eip155:${number}:${Address}`;
+
+type ERC8004Registration = {
+    agentId: number;
+    agentRegistry: EIP155Address;
+}
+
+type RegistrationEndpoint = {
+    name: "A2A";
+    endpoint: string;
+    version?: "0.3.0";
+} | {
+    name: "agentWallet";
+    endpoint: EIP155Address;
+} | {
+    name: "operatorWallet";
+    endpoint: EIP155Address;
+} | {
+    name: "ENS";
+    endpoint: string;
 }
 
 type MCPConnectionInfo =
