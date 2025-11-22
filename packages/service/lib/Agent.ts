@@ -55,12 +55,6 @@ export class Agent implements IAgent {
       await this.mcpClient.connectToServers(this.agentDescriptor.mcpServers);
     }
 
-    // Build system prompt from chat info
-    let systemPrompt = "";
-    if (this.agentDescriptor) {
-      systemPrompt = this.agentDescriptor.baseSystemPrompt || "";
-    }
-
     // Build messages array for Groq API
     const messages: Array<{
       role: "system" | "user" | "assistant";
@@ -68,8 +62,11 @@ export class Agent implements IAgent {
     }> = [];
 
     // Add system message if we have a system prompt
-    if (systemPrompt) {
-      messages.push({ role: "system", content: systemPrompt });
+    if (this.agentDescriptor.baseSystemPrompt) {
+      messages.push({
+        role: "system",
+        content: this.agentDescriptor.baseSystemPrompt,
+      });
     }
 
     // Load chat history from database
