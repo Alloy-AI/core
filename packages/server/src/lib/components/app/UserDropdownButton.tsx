@@ -55,46 +55,49 @@ export function UserDropdownButton() {
 			>
 				<DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
 					<DropdownMenuTrigger asChild>
-						<Image
-							src={avatarUrl}
-							alt="Profile"
-							className="aspect-square size-10 cursor-pointer border p-1 rounded-full object-cover"
-						>
-							<div className="flex aspect-square size-8 items-center justify-center rounded-full">
-								<UserIcon className="size-4 text-primary" weight="bold" />
-							</div>
-						</Image>
+						<div className="relative group cursor-pointer">
+							<div className="absolute -inset-0.5 bg-gradient-to-r from-primary via-chart-2 to-chart-4 rounded-full opacity-10 blur-sm group-hover:opacity-20 transition-opacity duration-500" />
+							<Image
+								src={avatarUrl}
+								alt="Profile"
+								className="relative z-10 aspect-square size-10 cursor-pointer border border-white/10 p-1 rounded-full object-cover bg-black/40 backdrop-blur-md shadow-inner"
+							>
+								<div className="flex aspect-square size-8 items-center justify-center rounded-full bg-white/5">
+									<UserIcon className="size-4 text-white/80 group-hover:text-white transition-colors" weight="bold" />
+								</div>
+							</Image>
+						</div>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
-						className="w-64 rounded-lg mt-1"
+						className="w-64 rounded-2xl mt-2 border border-white/10 bg-black/80 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] p-2"
 						align="end"
 						side="bottom"
 					>
 						{/* Profile Section */}
-						<DropdownMenuLabel className="text-muted-foreground text-xs">
-							Profile
+						<DropdownMenuLabel className="text-muted-foreground/60 text-xs px-2 uppercase tracking-wider font-medium">
+							Account
 						</DropdownMenuLabel>
-						<DropdownMenuItem className="gap-3 p-3 cursor-default">
+						<DropdownMenuItem className="gap-3 p-3 cursor-default focus:bg-white/5 rounded-xl">
 							<Image
 								src={avatarUrl}
 								alt="Profile"
-								className="aspect-square size-10 rounded-full object-cover"
+								className="aspect-square size-10 rounded-full object-cover ring-1 ring-white/10"
 							>
-								<div className="flex aspect-square size-10 items-center justify-center bg-muted/10 rounded-full">
-									<UserIcon className="size-6 text-muted-foreground" />
+								<div className="flex aspect-square size-10 items-center justify-center bg-gradient-to-br from-white/10 to-white/5 rounded-full">
+									<UserIcon className="size-5 text-white/70" />
 								</div>
 							</Image>
-							<div className="flex flex-col">
-								<p className="font-medium text-sm">{displayName}</p>
-								<div className="flex items-center gap-1">
-									<p className="text-xs text-muted-foreground">
+							<div className="flex flex-col gap-0.5">
+								<p className="font-medium text-sm text-white">{displayName}</p>
+								<div className="flex items-center gap-1.5">
+									<p className="text-xs text-muted-foreground font-mono">
 										{walletAddress ? formatAddress(walletAddress) : "No wallet"}
 									</p>
 									{walletAddress && (
 										<Button
 											variant="ghost"
 											size="sm"
-											className="h-4 w-4 p-0 hover:bg-accent/50"
+											className="h-5 w-5 p-0 hover:bg-white/10 text-muted-foreground hover:text-white rounded-full transition-colors"
 											onClick={() => copyToClipboard(walletAddress)}
 										>
 											<CopySimpleIcon className="h-3 w-3" />
@@ -104,17 +107,17 @@ export function UserDropdownButton() {
 							</div>
 						</DropdownMenuItem>
 
-						<DropdownMenuSeparator />
+						<div className="my-2 h-px bg-white/5 mx-2" />
 
 						{/* Sign Out */}
 						<DropdownMenuItem
 							onClick={handleLogout}
-							className="gap-2 p-2 cursor-pointer text-destructive focus:text-destructive"
+							className="gap-2 p-2 cursor-pointer text-destructive/90 focus:text-destructive hover:bg-destructive/10 focus:bg-destructive/10 rounded-xl transition-colors"
 						>
-							<div className="flex size-6 items-center justify-center rounded-md">
-								<SignOutIcon className="size-5 shrink-0 text-destructive" />
+							<div className="flex size-8 items-center justify-center rounded-lg bg-destructive/10 group-hover:bg-destructive/20">
+								<SignOutIcon className="size-4 shrink-0" />
 							</div>
-							<div className="font-medium">Sign out</div>
+							<div className="font-medium text-sm">Sign out</div>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
