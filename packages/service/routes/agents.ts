@@ -272,37 +272,6 @@ app.post("/", authenticated, async (c) => {
 });
 
 //@jriyyya
-app.get("/:address/.well-known/agent-card.json", async (ctx) => {
-  const address = ctx.req.param("address");
-  const [agent] = await db
-    .select()
-    .from(schema.agents)
-    .where(eq(schema.agents.address, address));
-
-  if (!agent) {
-    return ctx.json({ error: "Agent not found" }, { status: 404 });
-  }
-});
-
-app.get("/:address/registration.json", async (ctx) => {
-  const address = ctx.req.param("address");
-  const [agent] = await db
-    .select()
-    .from(schema.agents)
-    .where(eq(schema.agents.address, address));
-
-  if (!agent) {
-    return ctx.json({ error: "Agent not found" }, { status: 404 });
-  }
-
-  const registrationPieceCid = agent.registrationPieceCid;
-  const ds = await getOrCreateDataset();
-
-  const registrationBytes = await ds.download(registrationPieceCid);
-  const registration = jsonParse(new TextDecoder().decode(registrationBytes));
-
-  return ctx.json(registration, { status: 200 });
-});
 
 app.get("/:id", authenticated, async (c) => {
   const id = c.req.param("id");
@@ -355,6 +324,40 @@ app.put("/:id/base-system-prompt", authenticated, async (c) => {
     "Base system prompt updated successfully",
     200,
   );
+});
+
+app.get("/:address/.well-known/agent-card.json", async (ctx) => {
+  const address = ctx.req.param("address");
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.address, address));
+
+  if (!agent) {
+    return respond.err(ctx, "Agent not found", 404);
+  }
+
+  return respond.ok(ctx, { agent }, "Agent card retrieved successfully", 200);
+});
+
+app.get("/:address/registration.json", async (ctx) => {
+  const address = ctx.req.param("address");
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.address, address));
+
+  if (!agent) {
+    return respond.err(ctx, "Agent not found", 404);
+  }
+
+  const registrationPieceCid = agent.registrationPieceCid;
+  const ds = await getOrCreateDataset();
+
+  const registrationBytes = await ds.download(registrationPieceCid);
+  const registration = jsonParse(new TextDecoder().decode(registrationBytes));
+
+  return respond.ok(ctx, { registration }, "Registration retrieved successfully", 200);
 });
 
 export default app;

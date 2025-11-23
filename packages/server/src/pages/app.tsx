@@ -3,10 +3,10 @@ import {
   createRoute,
   createRouter,
   Outlet,
+  redirect,
 } from "@tanstack/react-router";
 import { withPageErrorBoundary } from "@/src/lib/components/errors/PageErrorBoundary";
 import { useAnalytics } from "../lib/hooks/use-analytics";
-import DashboardPage from "./dashboard";
 import AgentDetailsPage from "./dashboard/agent/agent-details";
 import AgentsPage from "./dashboard/agents";
 import CreateAgentPage from "./dashboard/create-agent";
@@ -35,8 +35,10 @@ const indexRoute = createRoute({
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
-  component: function Dashboard() {
-    return withPageErrorBoundary(DashboardPage)({});
+  beforeLoad: () => {
+    throw redirect({
+      to: "/agents",
+    });
   },
 });
 

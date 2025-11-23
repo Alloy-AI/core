@@ -55,9 +55,9 @@ export default function CreateAgentPage() {
             asChild
             className="text-muted-foreground hover:text-foreground pl-0 gap-2"
           >
-            <Link to="/dashboard">
+            <Link to="/agents">
               <ArrowLeftIcon className="size-4" />
-              Back to Dashboard
+              Back to Agents
             </Link>
           </Button>
         </div>

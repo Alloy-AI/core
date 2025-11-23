@@ -13,9 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Sidebar />
 
       <div className="ml-0 sm:ml-[var(--sidebar-width)] min-h-[calc(100dvh-var(--navbar-height))] @container/main p-6">
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
-          {children}
-        </div>
+        {children}
       </div>
 
       <div className="fixed right-4 bottom-4 z-50">
