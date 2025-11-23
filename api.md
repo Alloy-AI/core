@@ -35,19 +35,10 @@ Legend:
 - `POST /api/a2a/rpc`: Agent JSON-RPC endpoint (handshake/execute). (Skeleton only)
 
 ## ❌ Missing
-### Tools & Extensions
-- `GET /api/extensions`: List all available extensions/tools (Marketplace).
-- `POST /api/extensions`: Publish a new extension.
+### Tools
+- `GET /api/tools`: List all available extensions/tools (Marketplace).
+- `POST /api/tools`: Publish a new extension.
 
 ### AI Inference
 - `POST /api/chat/completions`: Generate AI response (OpenAI compatible).
 - `GET /api/agents/:id/price`: Get price per call.
-
-### Organization & Billing
-- `GET /api/organizations/:id/balance`: Get organization balance.
-- `GET /api/organizations/:id/models`: List enabled models.
-- `POST /api/organizations/:id/fund`: Fund organization.
-
-### Integrations
-- `GET /api/agents/:id/integrations`: Get integration status.
-- `POST /api/agents/:id/integrations/:type`: Configure integration (telegram/discord).

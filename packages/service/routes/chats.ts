@@ -18,7 +18,7 @@ app.get("/", authenticated, async (ctx) => {
 app.post("/", authenticated, async (ctx) => {
   const walletAddress = ctx.var.userWallet;
   const chatId = Bun.randomUUIDv7();
-  
+
   // Optional: if body contains agentId, we can link it.
   const body = await ctx.req.json().catch(() => ({}));
   const agentId = body.agentId ? Number(body.agentId) : undefined;
@@ -35,7 +35,7 @@ app.post("/", authenticated, async (ctx) => {
 // Get message history for a specific conversation
 app.get("/:id/messages", authenticated, async (ctx) => {
   const chatId = ctx.req.param("id");
-  
+
   // Verify ownership (optional but recommended)
   const chat = await db.getChat({ chatId });
   if (!chat) {

@@ -48,7 +48,7 @@ export class Agent implements IAgent {
   }): Promise<string> {
     const { message, chatId } = args;
 
-    // Connect to MCP servers if available
+
     if (
       this.agentDescriptor?.mcpServers &&
       this.agentDescriptor.mcpServers.length > 0
@@ -56,13 +56,13 @@ export class Agent implements IAgent {
       await this.mcpClient.connectToServers(this.agentDescriptor.mcpServers);
     }
 
-    // Build messages array for Groq API
+
     const messages: Array<{
       role: "system" | "user" | "assistant";
       content: string;
     }> = [];
 
-    // Add system message if we have a system prompt
+
     if (this.agentDescriptor.baseSystemPrompt) {
       messages.push({
         role: "system",
@@ -70,7 +70,7 @@ export class Agent implements IAgent {
       });
     }
 
-    // Load chat history from database
+
     if (chatId) {
       try {
         const history = await db.getChatHistory({ chatId });
@@ -80,7 +80,7 @@ export class Agent implements IAgent {
           } else if (msg.role === "assistant" || msg.role === "ai") {
             messages.push({ role: "assistant", content: msg.content });
           } else if (msg.role === "system") {
-            // System messages from history (if any)
+
             messages.push({ role: "system", content: msg.content });
           }
         }
@@ -89,10 +89,10 @@ export class Agent implements IAgent {
       }
     }
 
-    // Add the current user message
+
     messages.push({ role: "user", content: message });
 
-    // Get available MCP tools
+
     const mcpTools = await this.mcpClient.getAvailableTools();
     const tools: Record<string, any> = {};
 
@@ -107,7 +107,7 @@ export class Agent implements IAgent {
       };
     }
 
-    // Generate response using AI SDK with tools
+
     const { text } = await generateText({
       model: this.groq("llama-3.3-70b-versatile"),
       messages: messages,
@@ -115,7 +115,7 @@ export class Agent implements IAgent {
       tools: Object.keys(tools).length > 0 ? tools : undefined,
     });
 
-    // Disconnect from MCP servers after generation
+
     await this.mcpClient.disconnect();
 
     return text;
