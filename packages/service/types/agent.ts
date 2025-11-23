@@ -43,8 +43,8 @@ export type AgentDescriptor = {
   mcpServers: {
     id: string;
     name: string;
-    transport: "stdio" | "websocket" | "custom";
-    connectionInfo: MCPConnectionInfo;
+    url: string;
+    authHeaders?: Record<string, string>;
     enabled: boolean;
   }[];
 };

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import z from "zod";
 import { db } from "../db/client";
 import { Agent } from "../lib/Agent";
 import { respond } from "../lib/Router";
@@ -15,6 +16,13 @@ app.get("/", authenticated, async (ctx) => {
 
 // Start a new conversation
 app.post("/", authenticated, async (ctx) => {
+  const rawBody = await ctx.req.json();
+  const parsedBody = z
+    .object({
+      agentId: z.number().optional(),
+    })
+    .safeParse(rawBody);
+
   const walletAddress = ctx.var.userWallet;
   const chatId = Bun.randomUUIDv7();
 
