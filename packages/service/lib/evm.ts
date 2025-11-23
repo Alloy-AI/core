@@ -4,10 +4,10 @@ import { sepolia } from "viem/chains";
 import { appd } from "./appd";
 import { env } from "../env";
 
-export type ChainId = 11155111;
+export type ChainId = 11155111 | 84532 | 80002;
 
 export function isSupportedChain(chainId: number): chainId is ChainId {
-  return chainId === 11155111;
+  return chainId === 11155111 || chainId === 84532 || chainId === 80002;
 }
 
 export function resolveChain(chainId: ChainId) {

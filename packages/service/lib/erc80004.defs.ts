@@ -4,6 +4,8 @@ import { type ChainId, getEvmClient } from "./evm";
 const IdentityRegistry = {
   address: {
     11155111: "0x8004a6090Cd10A7288092483047B097295Fb8847",
+    84532: "0x8004AA63c570c570eBF15376c0dB199918BFe9Fb",
+    80002: "0x8004ad19E14B9e0654f73353e8a0B600D46C2898",
   },
   abi: [
     {
@@ -581,6 +583,8 @@ const IdentityRegistry = {
 const ReputationRegistry = {
   address: {
     11155111: "0x8004B8FD1A363aa02fDC07635C0c5F94f6Af5B7E",
+    84532: "0x8004bd8daB57f14Ed299135749a5CB5c42d341BF",
+    80002: "0x8004B12F4C2B42d00c46479e859C92e39044C930",
   },
   abi: [
     {
