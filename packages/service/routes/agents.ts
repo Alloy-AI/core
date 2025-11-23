@@ -23,24 +23,29 @@ app.get("/", authenticated, async (c) => {
 });
 
 app.post("/message", async (ctx) => {
-    const body = await ctx.req.json();
-    const parsedBody = z.object({
-        message: z.string().min(1),
-        agentId: z.string().min(1),
-    }).safeParse(body);
+  const body = await ctx.req.json();
+  const parsedBody = z
+    .object({
+      message: z.string().min(1),
+      agentId: z.string().min(1),
+    })
+    .safeParse(body);
 
-    if (!parsedBody.success) {
-        return ctx.json({ error: `Invalid request body ${parsedBody.error.message}` }, { status: 400 });
-    }
+  if (!parsedBody.success) {
+    return ctx.json(
+      { error: `Invalid request body ${parsedBody.error.message}` },
+      { status: 400 },
+    );
+  }
 
-    const { message, agentId } = parsedBody.data;
+  const { message, agentId } = parsedBody.data;
 
-    const agent = await Agent.fromId({ id: agentId });
-    if(agent.)
-    const response = await agent.generateResponse({ message });
+  const agent = await Agent.fromId({ id: agentId });
 
-    return respond.ok(ctx, { response }, "Respsne generated sucesffulyy", 200);
-})
+  const response = await agent.generateResponse({ message });
+
+  return respond.ok(ctx, { response }, "Respsne generated sucesffulyy", 200);
+});
 
 app.post("/", authenticated, async (c) => {
   const body = await tryCatch(c.req.json());
@@ -200,8 +205,14 @@ app.post("/", authenticated, async (c) => {
     }
     const logs = logsResult.data;
 
-    logs.forEach((log) => {
+    logs.forEach(async (log) => {
       if (log.args.agentId) {
+        await registry.write.safeTransferFrom([
+          evmClient.account.address,
+          c.get("userWallet"),
+          log.args.agentId,
+        ]);
+
         registrations.push({
           agentId: Number(log.args.agentId),
           agentRegistry: `eip155:${chainId}:${registry.address}`,

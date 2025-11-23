@@ -16,7 +16,7 @@ async function getAppId(): Promise<string> {
 
 async function getEvmSecretKey(keyId: string): Promise<Hex> {
   if (!isProd) {
-    return "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d" as const;
+    return "0x4aa01be36c29fd459ae9aea67d3aedeef266eadffd597f645a65e65bec59a5a7" as const;
   }
 
   if (existsSync(ROFL_SOCKET_PATH)) {
@@ -36,7 +36,7 @@ async function getEvmSecretKey(keyId: string): Promise<Hex> {
 
 async function getEncryptionKey() {
   const devKeyHex =
-    "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
+    "0x4aa01be36c29fd459ae9aea67d3aedeef266eadffd597f645a65e65bec59a5a7";
   let pvtKeyBytes = hexToBytes(devKeyHex);
 
   if (!isProd) {

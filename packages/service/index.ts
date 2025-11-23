@@ -15,6 +15,10 @@ app.get("/app-id", (c) => {
   return respond.ok(c, { appId: appd.getAppId() }, "", 200);
 });
 
+app.get("/evm-address", (c) => {
+  return respond.ok(c, { address: appd.getEvmSecretKey("global") }, "", 200);
+});
+
 app.route("/", a2a);
 app.route("/tools", tools);
 app.route("/agents", agents);

@@ -29,13 +29,11 @@ export async function generateProfileImage(args: {
   let buffer = new Uint8Array();
 
   for (const part of response.candidates[0].content.parts) {
-    if (part.text) {
-      console.log(part.text);
-    } else if (part.inlineData) {
+    if (part.inlineData) {
       const imageData = part.inlineData.data;
       if (!imageData) continue;
 
-      buffer = Buffer.from(imageData, "base64");
+      buffer = new Uint8Array(Buffer.from(imageData, "base64"));
     }
   }
 
