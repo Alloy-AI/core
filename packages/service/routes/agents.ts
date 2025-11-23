@@ -11,6 +11,7 @@ import { getEvmClient, isSupportedChain, resolveChain } from "../lib/evm";
 import { appd } from "../lib/appd";
 import { privateKeyToAddress } from "viem/accounts";
 import { identityRegistry } from "../lib/erc80004.defs";
+import { jsonParse, jsonStringify } from "../lib/json";
 
 
 const app = new Hono();
@@ -42,13 +43,28 @@ app.post("/", authenticated, async (c) => {
 
     const url = new URL(c.req.url);
 
-    const imageBytes = await generateProfileImage({ name: opts.name, description: opts.description });
-    const ds = await getOrCreateDataset()
+    const imageBytesResult = await tryCatch(generateProfileImage({ name: opts.name, description: opts.description }));
+    if (imageBytesResult.error) {
+        return respond.err(c, `Failed to generate profile image: ${imageBytesResult.error}`, 500);
+    }
+    const imageBytes = imageBytesResult.data;
+
+    const dsResult = await tryCatch(getOrCreateDataset());
+    if (dsResult.error) {
+        return respond.err(c, `Failed to get or create dataset: ${dsResult.error}`, 500);
+    }
+    const ds = dsResult.data;
+
     const imagePieceCid = calculatePieceCid(imageBytes);
     const filecoinUrl = `https://${serverAddressSynapse}.calibration.filbeam.io/${imagePieceCid}`;
+
     ds.upload(imageBytes)
 
-    const agentPvtKey = await appd.getEvmSecretKey(agentSeed)
+    const agentPvtKeyResult = await tryCatch(appd.getEvmSecretKey(agentSeed));
+    if (agentPvtKeyResult.error) {
+        return respond.err(c, `Failed to get agent private key: ${agentPvtKeyResult.error}`, 500);
+    }
+    const agentPvtKey = agentPvtKeyResult.data;
     const agentAddress = privateKeyToAddress(agentPvtKey)
 
     const addresses: { name: "agentWallet" | "operatorWallet", endpoint: EIP155Address }[] = []
@@ -77,17 +93,43 @@ app.post("/", authenticated, async (c) => {
     const registrations: AgentDescriptor["registration"]["registrations"] = [];
     for (const chainId of opts.chains) {
         if (!isSupportedChain(chainId)) continue;
-        const evmClient = await getEvmClient(chainId);
-        const registry = await identityRegistry(chainId);
-        const tx = await registry.write.register([registrationEndpoint])
-        const receipt = await evmClient.waitForTransactionReceipt({ hash: tx });
-        const logs = await evmClient.getContractEvents({
+
+        const evmClientResult = await tryCatch(getEvmClient(chainId));
+        if (evmClientResult.error) {
+            return respond.err(c, `Failed to get EVM client for chain ${chainId}: ${evmClientResult.error}`, 500);
+        }
+        const evmClient = evmClientResult.data;
+
+        const registryResult = await tryCatch(identityRegistry(chainId));
+        if (registryResult.error) {
+            return respond.err(c, `Failed to get identity registry for chain ${chainId}: ${registryResult.error}`, 500);
+        }
+        const registry = registryResult.data;
+
+        const txResult = await tryCatch(registry.write.register([registrationEndpoint]));
+        if (txResult.error) {
+            return respond.err(c, `Failed to register for chain ${chainId}: ${txResult.error}`, 500);
+        }
+        const tx = txResult.data;
+
+        const receiptResult = await tryCatch(evmClient.waitForTransactionReceipt({ hash: tx }));
+        if (receiptResult.error) {
+            return respond.err(c, `Failed to wait for transaction receipt for chain ${chainId}: ${receiptResult.error}`, 500);
+        }
+        const receipt = receiptResult.data;
+
+        const logsResult = await tryCatch(evmClient.getContractEvents({
             address: registry.address,
             abi: registry.abi,
             fromBlock: receipt.blockNumber,
             toBlock: receipt.blockNumber,
             eventName: "Registered"
-        })
+        }));
+        if (logsResult.error) {
+            return respond.err(c, `Failed to get contract events for chain ${chainId}: ${logsResult.error}`, 500);
+        }
+        const logs = logsResult.data;
+
         logs.forEach(log => {
             if (log.args.agentId) {
                 registrations.push({
@@ -110,9 +152,13 @@ app.post("/", authenticated, async (c) => {
             "tee-attestation"
         ]
     };
-    const registrationBytes = new TextEncoder().encode(JSON.stringify(registration));
+    const registrationBytes = new TextEncoder().encode(jsonStringify(registration));
     const registrationPieceCid = calculatePieceCid(registrationBytes);
-    ds.upload(registrationBytes);
+
+    const uploadRegistrationResult = await tryCatch(ds.upload(registrationBytes));
+    if (uploadRegistrationResult.error) {
+        return respond.err(c, `Failed to upload registration: ${uploadRegistrationResult.error}`, 500);
+    }
 
     const agentId = await tryCatch(db.createAgent({
         agentData: {
@@ -135,6 +181,7 @@ app.post("/", authenticated, async (c) => {
     return respond.ok(c, { agentId: agentId.data }, "Agent created successfully", 201);
 });
 
+//@jriyyya
 app.get("/:address/.well-known/agent-card.json", async (ctx) => {
     const address = ctx.req.param("address");
     const agent = await db.getAgent({ id: address });
@@ -146,11 +193,19 @@ app.get("/:address/.well-known/agent-card.json", async (ctx) => {
 
 app.get("/:address/registration.json", async (ctx) => {
     const address = ctx.req.param("address");
-    const agent = await db.getAgent({ id: address });
+    const agent = await db.getAgent({ address: address });
 
     if (!agent) {
         return ctx.json({ error: "Agent not found" }, { status: 404 });
     }
+
+    const registrationPieceCid = agent.registrationPieceCid;
+    const ds = await getOrCreateDataset();
+
+    const registrationBytes = await ds.download(registrationPieceCid);
+    const registration = jsonParse(new TextDecoder().decode(registrationBytes));
+
+    return ctx.json(registration, { status: 200 });
 })
 
 app.get("/:id", authenticated, async (c) => {
@@ -163,7 +218,6 @@ app.get("/:id", authenticated, async (c) => {
 
     return respond.ok(c, { agent }, "Agent details retrieved successfully", 200);
 });
-
 
 app.patch("/:id", authenticated, async (c) => {
     const id = c.req.param("id");
