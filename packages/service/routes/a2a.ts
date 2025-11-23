@@ -1,9 +1,8 @@
 import { Hono } from "hono";
-import { respond } from "../lib/Router";
 import { getAgentCard, handleJsonRpc } from "../lib/a2a";
+import { respond } from "../lib/Router";
 
 const app = new Hono();
-
 
 app.get("/agents/:id/.well-known/agent.json", async (c) => {
   const { id } = c.req.param();
@@ -105,4 +104,3 @@ app.post("/a2a", async (c) => {
 });
 
 export default app;
-

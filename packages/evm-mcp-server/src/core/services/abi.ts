@@ -1,5 +1,5 @@
-import { type Address } from 'viem';
-import { resolveChainId, getSupportedNetworks } from '../chains.js';
+import type { Address } from "viem";
+import { getSupportedNetworks, resolveChainId } from "../chains.js";
 
 /**
  * Fetch contract ABI from Etherscan v2 API (unified endpoint for all EVM chains)
@@ -11,11 +11,13 @@ import { resolveChainId, getSupportedNetworks } from '../chains.js';
  */
 export async function fetchContractABI(
   contractAddress: Address,
-  network: string = 'ethereum'
+  network: string = "ethereum",
 ): Promise<string> {
   const apiKey = process.env.ETHERSCAN_API_KEY;
   if (!apiKey) {
-    throw new Error('ETHERSCAN_API_KEY environment variable is not set. Set it to fetch contract ABIs from block explorers.');
+    throw new Error(
+      "ETHERSCAN_API_KEY environment variable is not set. Set it to fetch contract ABIs from block explorers.",
+    );
   }
 
   // Resolve chain ID using the chains.ts utilities
@@ -24,27 +26,31 @@ export async function fetchContractABI(
     chainId = resolveChainId(network);
   } catch (error) {
     const supported = getSupportedNetworks();
-    throw new Error(`Network "${network}" is not supported. Supported: ${supported.join(', ')}`);
+    throw new Error(
+      `Network "${network}" is not supported. Supported: ${supported.join(", ")}`,
+    );
   }
 
   try {
     // Use unified Etherscan v2 API endpoint
-    const url = new URL('https://api.etherscan.io/v2/api');
-    url.searchParams.set('module', 'contract');
-    url.searchParams.set('action', 'getabi');
-    url.searchParams.set('address', contractAddress);
-    url.searchParams.set('chainid', chainId.toString());
-    url.searchParams.set('apikey', apiKey);
+    const url = new URL("https://api.etherscan.io/v2/api");
+    url.searchParams.set("module", "contract");
+    url.searchParams.set("action", "getabi");
+    url.searchParams.set("address", contractAddress);
+    url.searchParams.set("chainid", chainId.toString());
+    url.searchParams.set("apikey", apiKey);
 
     const response = await fetch(url.toString());
-    const data = await response.json() as any;
+    const data = (await response.json()) as any;
 
-    if (data.status === '0') {
-      throw new Error(data.result || 'Failed to fetch ABI from block explorer');
+    if (data.status === "0") {
+      throw new Error(data.result || "Failed to fetch ABI from block explorer");
     }
 
     if (!data.result) {
-      throw new Error('No ABI found for this contract. Contract might not be verified.');
+      throw new Error(
+        "No ABI found for this contract. Contract might not be verified.",
+      );
     }
 
     return data.result;
@@ -65,11 +71,13 @@ export function parseABI(abiJson: string): any[] {
   try {
     const abi = JSON.parse(abiJson);
     if (!Array.isArray(abi)) {
-      throw new Error('ABI must be a JSON array');
+      throw new Error("ABI must be a JSON array");
     }
     return abi;
   } catch (error) {
-    throw new Error(`Invalid ABI JSON: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Invalid ABI JSON: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -80,11 +88,12 @@ export function parseABI(abiJson: string): any[] {
  */
 export function getReadableFunctions(abi: any[]): string[] {
   return abi
-    .filter(item =>
-      item.type === 'function' &&
-      (item.stateMutability === 'view' || item.stateMutability === 'pure')
+    .filter(
+      (item) =>
+        item.type === "function" &&
+        (item.stateMutability === "view" || item.stateMutability === "pure"),
     )
-    .map(item => item.name)
+    .map((item) => item.name)
     .filter(Boolean);
 }
 
@@ -95,8 +104,8 @@ export function getReadableFunctions(abi: any[]): string[] {
  * @returns The function ABI object
  */
 export function getFunctionFromABI(abi: any[], functionName: string): any {
-  const fn = abi.find(item =>
-    item.type === 'function' && item.name === functionName
+  const fn = abi.find(
+    (item) => item.type === "function" && item.name === functionName,
   );
 
   if (!fn) {

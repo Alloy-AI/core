@@ -1,12 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Button } from "../../lib/components/ui/button";
 import { menuItems } from "@/src/lib/config";
+import { Button } from "../../lib/components/ui/button";
 
 export default function Sidebar() {
   const { pathname } = useLocation();
   const isActive = (path: string) => pathname === path;
 
-  const sidebarItems = menuItems.filter(item => item.label !== "Home");
+  const sidebarItems = menuItems.filter((item) => item.label !== "Home");
 
   return (
     <div className="fixed top-[var(--navbar-height)] h-[calc(100dvh-var(--navbar-height))] w-[var(--sidebar-width)] left-0 z-40 hidden sm:flex flex-col gap-4 p-4">

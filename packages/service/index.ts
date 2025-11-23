@@ -1,13 +1,12 @@
 import { Hono } from "hono";
+import { db } from "./db/client";
+import { env } from "./env";
 import { appd } from "./lib/appd";
 import { respond } from "./lib/Router";
-import { env } from "./env";
-import { db } from "./db/client";
-
+import a2a from "./routes/a2a";
 // Route imports
 import agents from "./routes/agents";
 import chats from "./routes/chats";
-import a2a from "./routes/a2a";
 import tools from "./routes/tools";
 
 const app = new Hono();

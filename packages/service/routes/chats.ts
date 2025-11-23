@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { db } from "../db/client";
+import { Agent } from "../lib/Agent";
 import { respond } from "../lib/Router";
 import { authenticated } from "../middleware/auth";
-import { Agent } from "../lib/Agent";
 
 const app = new Hono();
 
@@ -25,7 +25,7 @@ app.post("/", authenticated, async (ctx) => {
   await db.createChat({
     chatId,
     walletAddress,
-    agentId
+    agentId,
   });
 
   return respond.ok(ctx, { chatId }, "Chat registered successfully", 201);
@@ -56,7 +56,7 @@ app.post("/:id/messages", authenticated, async (ctx) => {
   const messageData = {
     chatId,
     role: body.role || "user",
-    content: body.content
+    content: body.content,
   };
 
   // Verify ownership
@@ -86,22 +86,26 @@ app.post("/:id/messages", authenticated, async (ctx) => {
     const agent = await Agent.fromId({ id: agentData.id });
     const aiResponse = await agent.generateResponse({
       message: messageData.content,
-      chatId: chatId
+      chatId: chatId,
     });
 
     // Insert AI response
     await db.insertMessage({
       chatId,
       role: "assistant",
-      content: aiResponse
+      content: aiResponse,
     });
 
-    return respond.ok(ctx, {
-      message: aiResponse,
-      role: "assistant",
-      chatId
-    }, "Message sent successfully", 201);
-
+    return respond.ok(
+      ctx,
+      {
+        message: aiResponse,
+        role: "assistant",
+        chatId,
+      },
+      "Message sent successfully",
+      201,
+    );
   } catch (error) {
     console.error("Error generating AI response:", error);
     return respond.err(ctx, "Failed to generate response", 500);

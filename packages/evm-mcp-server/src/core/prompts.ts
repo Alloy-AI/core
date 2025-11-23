@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 /**
@@ -23,21 +23,37 @@ export function registerEVMPrompts(server: McpServer) {
   server.registerPrompt(
     "prepare_transfer",
     {
-      description: "Safely prepare and execute a token transfer with validation checks",
+      description:
+        "Safely prepare and execute a token transfer with validation checks",
       argsSchema: {
-        tokenType: z.enum(["native", "erc20"]).describe("Token type: 'native' for ETH/MATIC or 'erc20' for contract tokens"),
+        tokenType: z
+          .enum(["native", "erc20"])
+          .describe(
+            "Token type: 'native' for ETH/MATIC or 'erc20' for contract tokens",
+          ),
         recipient: z.string().describe("Recipient address or ENS name"),
-        amount: z.string().describe("Amount to transfer (in ether for native, token units for ERC20)"),
-        network: z.string().optional().describe("Network name (default: ethereum)"),
-        tokenAddress: z.string().optional().describe("Token contract address (required for ERC20)")
-      }
+        amount: z
+          .string()
+          .describe(
+            "Amount to transfer (in ether for native, token units for ERC20)",
+          ),
+        network: z
+          .string()
+          .optional()
+          .describe("Network name (default: ethereum)"),
+        tokenAddress: z
+          .string()
+          .optional()
+          .describe("Token contract address (required for ERC20)"),
+      },
     },
     ({ tokenType, recipient, amount, network = "ethereum", tokenAddress }) => ({
-      messages: [{
-        role: "user",
-        content: {
-          type: "text",
-          text: `# Token Transfer Task
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `# Token Transfer Task
 
 **Objective**: Safely transfer ${amount} ${tokenType === "native" ? "native tokens" : "ERC20 tokens"} to ${recipient} on ${network}
 
@@ -45,20 +61,25 @@ export function registerEVMPrompts(server: McpServer) {
 Before executing any transfer:
 1. **Wallet Verification**: Call \`get_wallet_address\` to confirm the sending wallet
 2. **Balance Check**:
-   ${tokenType === "native"
-              ? "- Call `get_balance` to verify native token balance"
-              : "- Call `get_token_balance` with tokenAddress=${tokenAddress} to verify balance"}
+   ${
+     tokenType === "native"
+       ? "- Call `get_balance` to verify native token balance"
+       : "- Call `get_token_balance` with tokenAddress=${tokenAddress} to verify balance"
+   }
 3. **Gas Analysis**: Call \`get_gas_price\` to assess current network costs
 ${tokenType === "erc20" ? `4. **Approval Check**: Call \`get_allowance\` to verify approval (if needed for protocols)` : ""}
 
 ## Execution Steps
-${tokenType === "native" ? `
+${
+  tokenType === "native"
+    ? `
 1. Summarize: sender address, recipient, amount, and estimated gas cost
 2. Request confirmation from user
 3. Call \`transfer_native\` with to="${recipient}", amount="${amount}", network="${network}"
 4. Return transaction hash to user
 5. Call \`wait_for_transaction\` to confirm completion
-` : `
+`
+    : `
 1. Check if approval is needed:
    - If allowance < amount: Call \`approve_token_spending\` first
    - Then proceed with transfer
@@ -66,7 +87,8 @@ ${tokenType === "native" ? `
 3. Request confirmation
 4. Call \`transfer_erc20\` with tokenAddress, recipient, amount
 5. Wait for confirmation with \`wait_for_transaction\`
-`}
+`
+}
 
 ## Output Format
 - **Transaction Hash**: Clear hex value
@@ -79,27 +101,33 @@ ${tokenType === "native" ? `
 - Double-check recipient address
 - Warn about high gas prices
 - Explain any approval requirements
-`
-        }
-      }]
-    })
+`,
+          },
+        },
+      ],
+    }),
   );
 
   server.registerPrompt(
     "diagnose_transaction",
     {
-      description: "Analyze transaction status, failures, and provide debugging insights",
+      description:
+        "Analyze transaction status, failures, and provide debugging insights",
       argsSchema: {
         txHash: z.string().describe("Transaction hash to diagnose (0x...)"),
-        network: z.string().optional().describe("Network name (default: ethereum)")
-      }
+        network: z
+          .string()
+          .optional()
+          .describe("Network name (default: ethereum)"),
+      },
     },
     ({ txHash, network = "ethereum" }) => ({
-      messages: [{
-        role: "user",
-        content: {
-          type: "text",
-          text: `# Transaction Diagnosis
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `# Transaction Diagnosis
 
 **Objective**: Analyze transaction ${txHash} on ${network} and identify any issues
 
@@ -159,10 +187,11 @@ Provide structured diagnosis:
 - Provide actionable recommendations
 - Link issues to specific contract behavior
 - Suggest solutions (retry, increase gas, fix parameters, etc.)
-`
-        }
-      }]
-    })
+`,
+          },
+        },
+      ],
+    }),
   );
 
   // ============================================================================
@@ -172,21 +201,29 @@ Provide structured diagnosis:
   server.registerPrompt(
     "analyze_wallet",
     {
-      description: "Get comprehensive overview of wallet assets, balances, and activity",
+      description:
+        "Get comprehensive overview of wallet assets, balances, and activity",
       argsSchema: {
         address: z.string().describe("Wallet address or ENS name to analyze"),
-        network: z.string().optional().describe("Network name (default: ethereum)"),
-        tokens: z.string().optional().describe("Comma-separated token addresses to check")
-      }
+        network: z
+          .string()
+          .optional()
+          .describe("Network name (default: ethereum)"),
+        tokens: z
+          .string()
+          .optional()
+          .describe("Comma-separated token addresses to check"),
+      },
     },
     ({ address, network = "ethereum", tokens }) => {
-      const tokenList = tokens ? tokens.split(',').map(t => t.trim()) : [];
+      const tokenList = tokens ? tokens.split(",").map((t) => t.trim()) : [];
       return {
-        messages: [{
-          role: "user",
-          content: {
-            type: "text",
-            text: `# Wallet Analysis
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: `# Wallet Analysis
 
 **Objective**: Provide complete asset overview for ${address} on ${network}
 
@@ -203,10 +240,12 @@ Provide structured diagnosis:
 - Note: Free read-only call
 
 ### 3. Token Balances
-${tokenList.length > 0
-                ? `- Call \`get_token_balance\` for each token:\n${tokenList.map(t => `  * ${t}`).join('\n')}`
-                : `- If specific tokens provided: call \`get_token_balance\` for each
-- Include token symbol and decimals if available`}
+${
+  tokenList.length > 0
+    ? `- Call \`get_token_balance\` for each token:\n${tokenList.map((t) => `  * ${t}`).join("\n")}`
+    : `- If specific tokens provided: call \`get_token_balance\` for each
+- Include token symbol and decimals if available`
+}
 
 ## Output Format
 
@@ -239,29 +278,40 @@ Provide analysis with clear sections:
 - Note if wallet has low/no balance
 - Highlight any unusual patterns
 - Be clear about what data was available vs not
-`
-          }
-        }]
+`,
+            },
+          },
+        ],
       };
-    }
+    },
   );
 
   server.registerPrompt(
     "audit_approvals",
     {
-      description: "Review token approvals and identify security risks from unlimited spend",
+      description:
+        "Review token approvals and identify security risks from unlimited spend",
       argsSchema: {
-        address: z.string().optional().describe("Wallet to audit (default: configured wallet)"),
-        tokenAddress: z.string().describe("Token contract address to check approvals for"),
-        network: z.string().optional().describe("Network name (default: ethereum)")
-      }
+        address: z
+          .string()
+          .optional()
+          .describe("Wallet to audit (default: configured wallet)"),
+        tokenAddress: z
+          .string()
+          .describe("Token contract address to check approvals for"),
+        network: z
+          .string()
+          .optional()
+          .describe("Network name (default: ethereum)"),
+      },
     },
     ({ address, tokenAddress, network = "ethereum" }) => ({
-      messages: [{
-        role: "user",
-        content: {
-          type: "text",
-          text: `# Token Approval Audit
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `# Token Approval Audit
 
 **Objective**: Check and analyze token approvals to identify security risks
 
@@ -330,10 +380,11 @@ For each spender:
 - Only approve what's necessary
 - Regularly audit and revoke unused approvals
 - Be especially careful with new/unknown contracts
-`
-        }
-      }]
-    })
+`,
+          },
+        },
+      ],
+    }),
   );
 
   // ============================================================================
@@ -343,19 +394,27 @@ For each spender:
   server.registerPrompt(
     "fetch_and_analyze_abi",
     {
-      description: "Fetch contract ABI from block explorer and provide comprehensive analysis",
+      description:
+        "Fetch contract ABI from block explorer and provide comprehensive analysis",
       argsSchema: {
         contractAddress: z.string().describe("Contract address to analyze"),
-        network: z.string().optional().describe("Network name (default: ethereum)"),
-        findFunction: z.string().optional().describe("Specific function to analyze (e.g., 'swap', 'mint')")
-      }
+        network: z
+          .string()
+          .optional()
+          .describe("Network name (default: ethereum)"),
+        findFunction: z
+          .string()
+          .optional()
+          .describe("Specific function to analyze (e.g., 'swap', 'mint')"),
+      },
     },
     ({ contractAddress, network = "ethereum", findFunction }) => ({
-      messages: [{
-        role: "user",
-        content: {
-          type: "text",
-          text: `# ABI Fetch and Analysis
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `# ABI Fetch and Analysis
 
 **Objective**: Retrieve and analyze contract ABI from block explorer
 
@@ -396,14 +455,18 @@ Organize functions by type:
 - Look for special functions (constructor, fallback, receive)
 - Check for custom errors
 
-${findFunction ? `### 4. Find Specific Function
+${
+  findFunction
+    ? `### 4. Find Specific Function
 - Search for "${findFunction}" in ABI
 - Document: inputs, outputs, mutability
 - Explain what it does
-- Note any access controls` : `### 4. Key Functions
+- Note any access controls`
+    : `### 4. Key Functions
 - Identify most important/used functions
 - Explain inputs and outputs
-- Note special requirements`}
+- Note special requirements`
+}
 
 ## Function Analysis Format
 
@@ -447,48 +510,61 @@ Look for:
 
 **How to Interact**:
 [Step-by-step guide for common operations]
-`
-        }
-      }]
-    })
+`,
+          },
+        },
+      ],
+    }),
   );
 
   server.registerPrompt(
     "explore_contract",
     {
-      description: "Analyze contract functions and state without requiring full ABI",
+      description:
+        "Analyze contract functions and state without requiring full ABI",
       argsSchema: {
         contractAddress: z.string().describe("Contract address to explore"),
-        network: z.string().optional().describe("Network name (default: ethereum)"),
-        fetchAbi: z.string().optional().describe("Set to 'true' to auto-fetch ABI (requires ETHERSCAN_API_KEY)")
-      }
+        network: z
+          .string()
+          .optional()
+          .describe("Network name (default: ethereum)"),
+        fetchAbi: z
+          .string()
+          .optional()
+          .describe(
+            "Set to 'true' to auto-fetch ABI (requires ETHERSCAN_API_KEY)",
+          ),
+      },
     },
     ({ contractAddress, network = "ethereum", fetchAbi }) => ({
-      messages: [{
-        role: "user",
-        content: {
-          type: "text",
-          text: `# Contract Exploration
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `# Contract Exploration
 
 **Objective**: Understand what contract ${contractAddress} does and how to use it
 
 ## Exploration Strategy
 
-${fetchAbi === 'true'
-              ? `### With Full ABI (Fetched)
+${
+  fetchAbi === "true"
+    ? `### With Full ABI (Fetched)
 1. Call \`get_contract_abi\` to fetch verified ABI
 2. Parse all available functions
 3. Call \`read_contract\` for important state functions
 4. Build comprehensive understanding
 `
-              : `### Without Full ABI (Probing)
+    : `### Without Full ABI (Probing)
 1. Test common function signatures
 2. Call \`read_contract\` with standard functions:
    - name(), symbol(), decimals(), totalSupply()
    - owner(), paused(), version()
    - balanceOf(), allowance(), totalSupply()
 3. Infer contract type from successful calls
-`}
+`
+}
 
 ## Detection Process
 
@@ -557,10 +633,11 @@ For each contract type:
 - Exploring unfamiliar/complex contracts
 - Security due diligence
 - Learn contract architecture
-`
-        }
-      }]
-    })
+`,
+          },
+        },
+      ],
+    }),
   );
 
   // ============================================================================
@@ -570,23 +647,38 @@ For each contract type:
   server.registerPrompt(
     "interact_with_contract",
     {
-      description: "Safely execute write operations on a smart contract with validation and confirmation",
+      description:
+        "Safely execute write operations on a smart contract with validation and confirmation",
       argsSchema: {
-        contractAddress: z.string().describe("Contract address to interact with"),
-        functionName: z.string().describe("Function to call (e.g., 'mint', 'swap', 'stake')"),
-        args: z.string().optional().describe("Comma-separated function arguments"),
-        value: z.string().optional().describe("ETH value to send (for payable functions)"),
-        network: z.string().optional().describe("Network name (default: ethereum)")
-      }
+        contractAddress: z
+          .string()
+          .describe("Contract address to interact with"),
+        functionName: z
+          .string()
+          .describe("Function to call (e.g., 'mint', 'swap', 'stake')"),
+        args: z
+          .string()
+          .optional()
+          .describe("Comma-separated function arguments"),
+        value: z
+          .string()
+          .optional()
+          .describe("ETH value to send (for payable functions)"),
+        network: z
+          .string()
+          .optional()
+          .describe("Network name (default: ethereum)"),
+      },
     },
     ({ contractAddress, functionName, args, value, network = "ethereum" }) => {
-      const argsList = args ? args.split(',').map(a => a.trim()) : [];
+      const argsList = args ? args.split(",").map((a) => a.trim()) : [];
       return {
-        messages: [{
-          role: "user",
-          content: {
-            type: "text",
-            text: `# Smart Contract Interaction
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: `# Smart Contract Interaction
 
 **Objective**: Safely execute ${functionName} on contract ${contractAddress} on ${network}
 
@@ -606,7 +698,7 @@ For each contract type:
 
 ### 3. Function Parameter Validation
 For function: **${functionName}**
-${argsList.length > 0 ? `Arguments provided: ${argsList.join(', ')}` : 'No arguments provided'}
+${argsList.length > 0 ? `Arguments provided: ${argsList.join(", ")}` : "No arguments provided"}
 
 - Verify parameter types match the ABI
 - Validate addresses are checksummed
@@ -634,8 +726,8 @@ Before executing, show:
 - **Contract**: ${contractAddress}
 - **Network**: ${network}
 - **Function**: ${functionName}
-- **Arguments**: ${argsList.length > 0 ? argsList.join(', ') : 'None'}
-${value ? `- **Value**: ${value} ETH` : ''}
+- **Arguments**: ${argsList.length > 0 ? argsList.join(", ") : "None"}
+${value ? `- **Value**: ${value} ETH` : ""}
 - **From**: [wallet address from step 1]
 - **Estimated Gas Cost**: [from gas estimation]
 - **Total Cost**: [gas + value]
@@ -652,8 +744,8 @@ Only after user confirms:
 Call write_contract with:
 - contractAddress: "${contractAddress}"
 - functionName: "${functionName}"
-${argsList.length > 0 ? `- args: ${JSON.stringify(argsList)}` : ''}
-${value ? `- value: "${value}"` : ''}
+${argsList.length > 0 ? `- args: ${JSON.stringify(argsList)}` : ""}
+${value ? `- value: "${value}"` : ""}
 - network: "${network}"
 \`\`\`
 
@@ -733,11 +825,12 @@ For a token mint operation:
 9. ✅ Confirm success and return token ID
 
 **Remember**: Always prioritize user safety and transparency!
-`
-          }
-        }]
+`,
+            },
+          },
+        ],
       };
-    }
+    },
   );
 
   server.registerPrompt(
@@ -745,15 +838,20 @@ For a token mint operation:
     {
       description: "Explain EVM and blockchain concepts with examples",
       argsSchema: {
-        concept: z.string().describe("Concept to explain (gas, nonce, smart contracts, MEV, etc)")
-      }
+        concept: z
+          .string()
+          .describe(
+            "Concept to explain (gas, nonce, smart contracts, MEV, etc)",
+          ),
+      },
     },
     ({ concept }) => ({
-      messages: [{
-        role: "user",
-        content: {
-          type: "text",
-          text: `# Concept Explanation: ${concept}
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `# Concept Explanation: ${concept}
 
 **Objective**: Provide clear, practical explanation of "${concept}"
 
@@ -812,30 +910,37 @@ Provide explanation in sections:
 - Include concrete numbers where helpful
 - Be honest about complexity
 - Suggest further learning if needed
-`
-        }
-      }]
-    })
+`,
+          },
+        },
+      ],
+    }),
   );
 
   server.registerPrompt(
     "compare_networks",
     {
-      description: "Compare multiple EVM networks on key metrics and characteristics",
+      description:
+        "Compare multiple EVM networks on key metrics and characteristics",
       argsSchema: {
-        networks: z.string().describe("Comma-separated network names (ethereum,polygon,arbitrum)")
-      }
+        networks: z
+          .string()
+          .describe(
+            "Comma-separated network names (ethereum,polygon,arbitrum)",
+          ),
+      },
     },
     ({ networks }) => {
-      const networkList = networks.split(',').map(n => n.trim());
+      const networkList = networks.split(",").map((n) => n.trim());
       return {
-        messages: [{
-          role: "user",
-          content: {
-            type: "text",
-            text: `# Network Comparison
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: `# Network Comparison
 
-**Objective**: Compare ${networkList.join(', ')} on key metrics
+**Objective**: Compare ${networkList.join(", ")} on key metrics
 
 ## Comparison Metrics
 
@@ -937,11 +1042,12 @@ Help user choose based on:
 - Budget constraints
 - Required finality
 - Ecosystem needs
-`
-          }
-        }]
+`,
+            },
+          },
+        ],
       };
-    }
+    },
   );
 
   server.registerPrompt(
@@ -949,15 +1055,19 @@ Help user choose based on:
     {
       description: "Check current network health and conditions",
       argsSchema: {
-        network: z.string().optional().describe("Network name (default: ethereum)")
-      }
+        network: z
+          .string()
+          .optional()
+          .describe("Network name (default: ethereum)"),
+      },
     },
     ({ network = "ethereum" }) => ({
-      messages: [{
-        role: "user",
-        content: {
-          type: "text",
-          text: `# Network Status Check
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `# Network Status Check
 
 **Objective**: Assess health and current conditions of ${network}
 
@@ -1048,9 +1158,10 @@ Reference points for interpretation:
 - Arbitrum normal: <1 second
 - Normal gas: 20-50 gwei
 - High congestion: 100+ gwei
-`
-        }
-      }]
-    })
+`,
+          },
+        },
+      ],
+    }),
   );
 }

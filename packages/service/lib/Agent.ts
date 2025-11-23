@@ -42,7 +42,6 @@ export class Agent implements IAgent {
   }): Promise<string> {
     const { message, chatId } = args;
 
-
     if (
       this.agentDescriptor?.mcpServers &&
       this.agentDescriptor.mcpServers.length > 0
@@ -50,12 +49,10 @@ export class Agent implements IAgent {
       await this.mcpClient.connectToServers(this.agentDescriptor.mcpServers);
     }
 
-
     const messages: Array<{
       role: "system" | "user" | "assistant";
       content: string;
     }> = [];
-
 
     if (this.agentDescriptor.baseSystemPrompt) {
       messages.push({
@@ -63,7 +60,6 @@ export class Agent implements IAgent {
         content: this.agentDescriptor.baseSystemPrompt,
       });
     }
-
 
     if (chatId) {
       try {
@@ -74,7 +70,6 @@ export class Agent implements IAgent {
           } else if (msg.role === "assistant" || msg.role === "ai") {
             messages.push({ role: "assistant", content: msg.content });
           } else if (msg.role === "system") {
-
             messages.push({ role: "system", content: msg.content });
           }
         }
@@ -83,9 +78,7 @@ export class Agent implements IAgent {
       }
     }
 
-
     messages.push({ role: "user", content: message });
-
 
     const mcpTools = await this.mcpClient.getAvailableTools();
     const tools: Record<string, any> = {};
@@ -102,9 +95,9 @@ export class Agent implements IAgent {
     }
 
     const llm = createOpenAI({
-        apiKey: process.env.GROQ_API_KEY,
-        baseURL: "https://api.groq.com/openai/v1",
-    })
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1",
+    });
 
     const { text } = await generateText({
       model: llm(this.agentDescriptor.model),
@@ -112,7 +105,6 @@ export class Agent implements IAgent {
       temperature: 0.7,
       tools: Object.keys(tools).length > 0 ? tools : undefined,
     });
-
 
     await this.mcpClient.disconnect();
 

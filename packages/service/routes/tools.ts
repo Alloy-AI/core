@@ -131,4 +131,3 @@ app.patch("/:id/:toolId/toggle", async (c) => {
 });
 
 export default app;
-

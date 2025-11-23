@@ -1,9 +1,8 @@
 import { z } from "zod";
 import { db } from "../db/client";
+import type { AgentDescriptor } from "../types/agent";
 import { Agent } from "./Agent";
 import { AgentCardSchema } from "./zod";
-import type { AgentDescriptor } from "../types/agent";
-
 
 // Types & Schemas
 export type TaskState =
@@ -58,7 +57,6 @@ export interface Artifact {
   kind?: "artifact-update";
 }
 
-
 // JSON-RPC 2.0 Request/Response
 export interface JsonRpcRequest {
   jsonrpc: "2.0";
@@ -77,7 +75,6 @@ export interface JsonRpcResponse {
     data?: unknown;
   };
 }
-
 
 // In-Memory Task Store
 class TaskStore {
@@ -150,7 +147,6 @@ class TaskStore {
 
 const taskStore = new TaskStore();
 
-
 // AgentCard Functions
 export async function getAgentCard(args: {
   id?: string;
@@ -179,7 +175,6 @@ export async function getAgentCard(args: {
 
   return AgentCardSchema.parse(publicCard);
 }
-
 
 // Task Execution
 async function executeTask(
@@ -426,7 +421,6 @@ export async function handleTasksCancel(params: {
   }
 }
 
-
 // Main JSON-RPC Handler
 export async function handleJsonRpc(
   agentId: string,
@@ -471,4 +465,3 @@ export async function handleJsonRpc(
 export async function getAgent(args: { id: string }) {
   return await getAgentCard({ agentId: args.id });
 }
-

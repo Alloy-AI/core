@@ -1,14 +1,14 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Image } from "@/src/lib/components/custom/Image";
-import { Button } from "@/src/lib/components/ui/button";
-import { menuItems } from "@/src/lib/config";
 import ThemeSwitch from "@/src/lib/components/custom/ThemeSwitch";
+import { Button } from "@/src/lib/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/src/lib/components/ui/sheet";
+import { menuItems } from "@/src/lib/config";
 
 interface MenuSheetProps {
   open: boolean;
@@ -85,9 +85,9 @@ export default function MenuSheet({ open, onOpenChange }: MenuSheetProps) {
                 Upgrade
               </Button>
             </div>
-            
+
             <div className="flex justify-center">
-               <ThemeSwitch />
+              <ThemeSwitch />
             </div>
           </div>
         </div>

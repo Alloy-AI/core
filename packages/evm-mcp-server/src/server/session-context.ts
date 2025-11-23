@@ -1,4 +1,4 @@
-import { type Hex } from 'viem';
+import type { Hex } from "viem";
 
 /**
  * Session context to store per-session private keys
@@ -21,7 +21,7 @@ export class SessionContext {
     if (!this.privateKey) {
       throw new Error(
         "No private key configured for this session. " +
-        "Please provide a private key in the Bearer token (Authorization header) when connecting to the MCP server."
+          "Please provide a private key in the Bearer token (Authorization header) when connecting to the MCP server.",
       );
     }
     return this.privateKey;

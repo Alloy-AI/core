@@ -1,4 +1,6 @@
 import { SQL } from "bun";
+import z from "zod";
+import { env } from "../env";
 import { decryptSelf, encryptSelf } from "../lib/crypto";
 import {
   AgentCardSchema,
@@ -8,8 +10,6 @@ import {
   RawAgentCardRowSchema,
   UpdateAgentCardSchema,
 } from "../lib/zod";
-import { env } from "../env";
-import z from "zod";
 
 const sql = new SQL(env.PG_URI);
 
@@ -17,7 +17,7 @@ type AgentData = {
   name: string;
   description: string;
   model: string;
-  keySeed:string;
+  keySeed: string;
   registrationPieceCid: string;
   baseSystemPrompt: string;
   knowledgeBases: any[];
@@ -105,14 +105,16 @@ async function getChatHistory(args: { chatId: string }) {
         ORDER BY ch.timestamp ASC
     `;
 
-  return Promise.all(results.map(async (row: unknown) => {
-    const rawRow = row as ChatHistoryRow;
-    const decryptedRow = {
-      ...rawRow,
-      content: await decryptSelf({ ciphertext: rawRow.content }),
-    };
-    return decryptedRow as ChatHistoryRow;
-  }));
+  return Promise.all(
+    results.map(async (row: unknown) => {
+      const rawRow = row as ChatHistoryRow;
+      const decryptedRow = {
+        ...rawRow,
+        content: await decryptSelf({ ciphertext: rawRow.content }),
+      };
+      return decryptedRow as ChatHistoryRow;
+    }),
+  );
 }
 
 async function getChatsByWallet(args: { walletAddress: string }) {
@@ -129,7 +131,12 @@ async function getChatsByWallet(args: { walletAddress: string }) {
       walletAddress: parsedRow.wallet_address,
       agentId: parsedRow.agent_id,
       createdAt: parsedRow.created_at,
-    } as { id: string; walletAddress: string; agentId: number | null; createdAt: string; };
+    } as {
+      id: string;
+      walletAddress: string;
+      agentId: number | null;
+      createdAt: string;
+    };
   });
 }
 
@@ -175,7 +182,12 @@ async function getChat(args: { chatId: string }) {
     walletAddress: row.wallet_address,
     agentId: row.agent_id,
     createdAt: row.created_at,
-  } as { id: string; walletAddress: string; agentId: number | null; createdAt: string; };
+  } as {
+    id: string;
+    walletAddress: string;
+    agentId: number | null;
+    createdAt: string;
+  };
 }
 
 async function deleteChat(args: { chatId: string }) {
@@ -193,7 +205,7 @@ async function createAgent(args: { agentData: AgentData }) {
   return result[0];
 }
 
-async function getAgent(args: { id?: string, address?: string }) {
+async function getAgent(args: { id?: string; address?: string }) {
   const { id, address } = args;
   const result = await sql`
         SELECT * FROM agents WHERE id = ${id ?? "_"} OR address = ${address ?? "_"}
@@ -280,10 +292,13 @@ async function getAllAgents(args: {}) {
   });
 }
 
-async function createAgentCard(args: { agentId: string; card: z.infer<typeof AgentCardSchema> }) {
+async function createAgentCard(args: {
+  agentId: string;
+  card: z.infer<typeof AgentCardSchema>;
+}) {
   const validatedArgs = CreateAgentCardSchema.parse(args);
   const { agentId, card } = validatedArgs;
-  
+
   const result = await sql`
     INSERT INTO agent_cards (
       agent_id, human_readable_id, schema_version, agent_version,
@@ -303,46 +318,54 @@ async function createAgentCard(args: { agentId: string; card: z.infer<typeof Age
   return result[0];
 }
 
-async function getAgentCard(args: { id?: string; humanReadableId?: string; agentId?: string }) {
+async function getAgentCard(args: {
+  id?: string;
+  humanReadableId?: string;
+  agentId?: string;
+}) {
   const validatedArgs = GetAgentCardSchema.parse(args);
   const { id, humanReadableId, agentId } = validatedArgs;
-  
+
   let result;
   if (id) {
     result = await sql`SELECT * FROM agent_cards WHERE id = ${id}`;
   } else if (humanReadableId) {
-    result = await sql`SELECT * FROM agent_cards WHERE human_readable_id = ${humanReadableId}`;
+    result =
+      await sql`SELECT * FROM agent_cards WHERE human_readable_id = ${humanReadableId}`;
   } else if (agentId) {
     result = await sql`SELECT * FROM agent_cards WHERE agent_id = ${agentId}`;
   } else {
     return null;
   }
-  
+
   if (result.length === 0) return null;
-  
+
   // Parse the raw row, handling Date objects from database
   const rawRow = result[0];
   const row = {
     ...rawRow,
-    last_updated: rawRow.last_updated instanceof Date 
-      ? rawRow.last_updated.toISOString() 
-      : typeof rawRow.last_updated === 'string' 
-        ? rawRow.last_updated 
-        : String(rawRow.last_updated),
-    created_at: rawRow.created_at instanceof Date 
-      ? rawRow.created_at.toISOString() 
-      : typeof rawRow.created_at === 'string' 
-        ? rawRow.created_at 
-        : String(rawRow.created_at),
-    updated_at: rawRow.updated_at instanceof Date 
-      ? rawRow.updated_at.toISOString() 
-      : typeof rawRow.updated_at === 'string' 
-        ? rawRow.updated_at 
-        : String(rawRow.updated_at),
+    last_updated:
+      rawRow.last_updated instanceof Date
+        ? rawRow.last_updated.toISOString()
+        : typeof rawRow.last_updated === "string"
+          ? rawRow.last_updated
+          : String(rawRow.last_updated),
+    created_at:
+      rawRow.created_at instanceof Date
+        ? rawRow.created_at.toISOString()
+        : typeof rawRow.created_at === "string"
+          ? rawRow.created_at
+          : String(rawRow.created_at),
+    updated_at:
+      rawRow.updated_at instanceof Date
+        ? rawRow.updated_at.toISOString()
+        : typeof rawRow.updated_at === "string"
+          ? rawRow.updated_at
+          : String(rawRow.updated_at),
   };
-  
+
   const parsedRow = RawAgentCardRowSchema.parse(row);
-  
+
   const card = {
     id: String(parsedRow.id),
     agentId: String(parsedRow.agent_id),
@@ -362,24 +385,27 @@ async function getAgentCard(args: { id?: string; humanReadableId?: string; agent
     createdAt: parsedRow.created_at,
     updatedAt: parsedRow.updated_at,
   };
-  
+
   const ExtendedAgentCardSchema = AgentCardSchema.extend({
     id: z.string(),
     agentId: z.string(),
     createdAt: z.string(),
     updatedAt: z.string(),
   });
-  
+
   return ExtendedAgentCardSchema.parse(card);
 }
 
-async function updateAgentCard(args: { id: string; updates: Partial<z.infer<typeof AgentCardSchema>> }) {
+async function updateAgentCard(args: {
+  id: string;
+  updates: Partial<z.infer<typeof AgentCardSchema>>;
+}) {
   const validatedArgs = UpdateAgentCardSchema.parse(args);
   const { id, updates } = validatedArgs;
-  
+
   const fields: string[] = [];
   const values: any[] = [];
-  
+
   if (updates.schemaVersion !== undefined) {
     fields.push("schema_version = ?");
     values.push(updates.schemaVersion);
@@ -432,12 +458,12 @@ async function updateAgentCard(args: { id: string; updates: Partial<z.infer<type
     fields.push("last_updated = ?");
     values.push(updates.lastUpdated);
   }
-  
+
   if (fields.length === 0) return;
-  
+
   fields.push("updated_at = CURRENT_TIMESTAMP");
   values.push(id);
-  
+
   const query = `UPDATE agent_cards SET ${fields.join(", ")} WHERE id = ?`;
   await sql.unsafe(query, values);
 }
@@ -449,7 +475,7 @@ async function deleteAgentCard(args: { id: string }) {
 }
 
 export const db = {
-    $client: sql,
+  $client: sql,
   insertMessage,
   getChatHistory,
   getChatsByWallet,

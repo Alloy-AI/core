@@ -2,13 +2,21 @@ import z from "zod";
 
 const envRaw = Bun.env;
 
-export const env = z.object({
+export const env = z
+  .object({
     NODE_ENV: z.string().default("development"),
     GROQ_API_KEY: z.string(),
     PG_URI: z.string(),
-    PORT: z.string().default("3000").transform((port) => parseInt(port)),
-    EVM_PRIVATE_KEY_SYNAPSE: z.string().startsWith("0x").transform((key) => key as `0x${string}`),
+    PORT: z
+      .string()
+      .default("3000")
+      .transform((port) => parseInt(port)),
+    EVM_PRIVATE_KEY_SYNAPSE: z
+      .string()
+      .startsWith("0x")
+      .transform((key) => key as `0x${string}`),
     GEMINI_API_KEY: z.string(),
-}).parse(envRaw)
+  })
+  .parse(envRaw);
 
 export const isProd = env.NODE_ENV === "production";
