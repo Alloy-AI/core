@@ -11,6 +11,16 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
+export const economyLog = pgTable("economy_log", {
+  id: serial("id").primaryKey(),
+  initiator: varchar("initiator", { length: 255 }).notNull(),
+  intent: text("intent").notNull(),
+  witness: text("witness").notNull(),
+  keeper: varchar("keeper", { length: 255 }).notNull(),
+  challenge: text("challenge").notNull(),
+  timestamp: timestamp("created_at").defaultNow(),
+});
+
 export const agents = pgTable(
   "agents",
   {
@@ -174,6 +184,7 @@ export const selectedMcp = pgTable(
 );
 
 const schema = {
+  economyLog,
   agents,
   knowledges,
   agentKnowledge,
