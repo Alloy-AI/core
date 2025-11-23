@@ -236,14 +236,7 @@ app.post("/", authenticated, async (c) => {
   );
   const registrationPieceCid = calculatePieceCid(registrationBytes);
 
-  const uploadRegistrationResult = await tryCatch(ds.upload(registrationBytes));
-  if (uploadRegistrationResult.error) {
-    return respond.err(
-      c,
-      `Failed to upload registration: ${uploadRegistrationResult.error}`,
-      500,
-    );
-  }
+  ds.upload(registrationBytes);
 
   const agentId = await tryCatch(
     db.insert(schema.agents).values({
