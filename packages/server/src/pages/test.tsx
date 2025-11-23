@@ -326,11 +326,11 @@ export default function TestPage() {
           <div className="grid gap-2 mt-4">
             {chats?.map((c) => (
               <div
-                key={c.chatId}
+                key={c.id}
                 className="flex items-center justify-between p-3 bg-card border border-border rounded-md text-sm hover:bg-muted/50 transition-colors"
               >
                 <span className="text-card-foreground">
-                  Chat {c.chatId.slice(0, 8)}...{" "}
+                  Chat {c.id.slice(0, 8)}...{" "}
                   <span className="text-muted-foreground text-xs ml-2">
                     ({new Date(c.createdAt).toLocaleTimeString()})
                   </span>
@@ -339,7 +339,7 @@ export default function TestPage() {
                   size="sm"
                   variant="secondary"
                   className="h-7 text-xs"
-                  onClick={() => setActiveChatId(c.chatId)}
+                  onClick={() => setActiveChatId(c.id)}
                 >
                   Open
                 </Button>

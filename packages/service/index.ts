@@ -30,9 +30,21 @@ app.route("/tools", tools);
 app.route("/agents", agents);
 app.route("/chats", chats);
 
-const _server = Bun.serve({
+const server = Bun.serve({
   port: env.PORT,
   fetch: app.fetch,
 });
 
 console.log(`Server running on port ${env.PORT}`);
+
+process.on("SIGINT", () => {
+  console.log("\nShutting down server...");
+  server.stop();
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  console.log("\nShutting down server...");
+  server.stop();
+  process.exit(0);
+});

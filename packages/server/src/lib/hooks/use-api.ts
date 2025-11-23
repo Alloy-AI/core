@@ -25,7 +25,7 @@ export interface Tool {
 }
 
 export interface Chat {
-  chatId: string;
+  id: string;
   walletAddress: string;
   agentId?: number;
   createdAt: string;
