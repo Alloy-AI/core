@@ -3,6 +3,9 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import startServer from "./server.js";
 import express, { Request, Response } from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { getSessionContext, deleteSessionContext } from "./session-context.js";
+import { runWithSessionContext } from "./async-context.js";
+import { type Hex } from "viem";
 
 // Environment variables
 const PORT = parseInt(process.env.MCP_PORT || "3001", 10);
@@ -13,6 +16,29 @@ console.error(`Configured to listen on ${HOST}:${PORT}`);
 // Setup Express
 const app = express();
 app.use(express.json({ limit: '10mb' })); // Prevent DoS attacks with huge payloads
+
+/**
+ * Extract and validate private key from Bearer token
+ * Expected format: Authorization: Bearer <hex_private_key>
+ */
+function extractPrivateKeyFromBearer(req: Request): Hex | null {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+  // Validate it's a valid hex private key (with or without 0x prefix)
+  const privateKey = token.startsWith('0x') ? token : `0x${token}`;
+
+  // Basic validation: should be 66 characters (0x + 64 hex chars)
+  if (!/^0x[0-9a-fA-F]{64}$/.test(privateKey)) {
+    throw new Error('Invalid private key format in Bearer token. Expected 64 hex characters.');
+  }
+
+  return privateKey as Hex;
+}
 
 // Track active transports by session ID with cleanup
 const transports = new Map<string, StreamableHTTPServerTransport>();
@@ -33,6 +59,7 @@ setInterval(() => {
       }
       transports.delete(sessionId);
       sessionTimestamps.delete(sessionId);
+      deleteSessionContext(sessionId); // Clean up session context
     }
   }
 }, 5 * 60 * 1000); // Check every 5 minutes
@@ -57,6 +84,19 @@ app.post("/mcp", async (req: Request, res: Response) => {
     return;
   }
 
+  // Extract private key from Bearer token
+  let privateKey: Hex | null = null;
+  try {
+    privateKey = extractPrivateKeyFromBearer(req);
+  } catch (error) {
+    console.error(`Invalid Bearer token: ${error}`);
+    res.status(401).json({
+      error: "Invalid private key in Bearer token",
+      message: error instanceof Error ? error.message : String(error)
+    });
+    return;
+  }
+
   // Check for existing session
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   let transport: StreamableHTTPServerTransport;
@@ -66,7 +106,24 @@ app.post("/mcp", async (req: Request, res: Response) => {
     transport = transports.get(sessionId)!;
     sessionTimestamps.set(sessionId, Date.now()); // Update last activity
     console.error(`Reusing transport for session: ${sessionId}`);
+
+    // Update private key in session context if provided
+    if (privateKey) {
+      const context = getSessionContext(sessionId);
+      context.setPrivateKey(privateKey);
+      console.error(`Updated private key for session: ${sessionId}`);
+    }
   } else if (!sessionId) {
+    // New session - require private key
+    if (!privateKey) {
+      console.error("No private key provided for new session");
+      res.status(401).json({
+        error: "Private key required",
+        message: "Please provide your Ethereum private key in the Authorization header as 'Bearer <private_key>'"
+      });
+      return;
+    }
+
     // New session - create transport with session ID generator
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
@@ -74,11 +131,17 @@ app.post("/mcp", async (req: Request, res: Response) => {
         console.error(`Session initialized: ${newSessionId}`);
         transports.set(newSessionId, transport);
         sessionTimestamps.set(newSessionId, Date.now());
+
+        // Set private key in session context
+        const context = getSessionContext(newSessionId);
+        context.setPrivateKey(privateKey!);
+        console.error(`Private key configured for session: ${newSessionId}`);
       },
       onsessionclosed: (closedSessionId) => {
         console.error(`Session closed: ${closedSessionId}`);
         transports.delete(closedSessionId);
         sessionTimestamps.delete(closedSessionId);
+        deleteSessionContext(closedSessionId); // Clean up session context
       }
     });
 
@@ -92,9 +155,15 @@ app.post("/mcp", async (req: Request, res: Response) => {
     return;
   }
 
-  // Handle the request
+  // Handle the request within session context
   try {
-    await transport.handleRequest(req, res, req.body);
+    // Get the session ID from transport or create a temporary one
+    const currentSessionId = sessionId || 'temp-session';
+
+    // Run request handling within async context
+    await runWithSessionContext(currentSessionId, async () => {
+      await transport.handleRequest(req, res, req.body);
+    });
   } catch (error) {
     console.error(`Error handling request: ${error}`);
     if (!res.headersSent) {
@@ -144,6 +213,8 @@ app.delete("/mcp", async (req: Request, res: Response) => {
 
   try {
     await transport.handleRequest(req, res);
+    // Clean up session context
+    deleteSessionContext(sessionId);
   } catch (error) {
     console.error(`Error closing session: ${error}`);
     if (!res.headersSent) {
@@ -186,6 +257,7 @@ process.on('SIGINT', async () => {
   for (const [sessionId, transport] of transports) {
     console.error(`Closing transport for session: ${sessionId}`);
     await transport.close();
+    deleteSessionContext(sessionId);
   }
   transports.clear();
 
@@ -198,6 +270,7 @@ process.on('SIGTERM', async () => {
   for (const [sessionId, transport] of transports) {
     console.error(`Closing transport for session: ${sessionId}`);
     await transport.close();
+    deleteSessionContext(sessionId);
   }
   transports.clear();
 

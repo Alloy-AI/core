@@ -3,10 +3,17 @@ import { registerEVMResources } from "../core/resources.js";
 import { registerEVMTools } from "../core/tools.js";
 import { registerEVMPrompts } from "../core/prompts.js";
 import { getSupportedNetworks } from "../core/chains.js";
+import { getSessionContext } from "./session-context.js";
+import { getCurrentSessionId } from "./async-context.js";
+import { setSessionContextGetter, setCurrentSessionIdGetter } from "../core/services/wallet.js";
 
 // Create and start the MCP server
 async function startServer() {
   try {
+    // Wire up session context getter for wallet service
+    setSessionContextGetter(getSessionContext);
+    setCurrentSessionIdGetter(getCurrentSessionId);
+
     // Create a new MCP server instance with capabilities
     const server = new McpServer(
       {
@@ -39,6 +46,7 @@ async function startServer() {
     console.error(`EVM MCP Server v2.0.0 initialized`);
     console.error(`Protocol: MCP 2025-06-18`);
     console.error(`Supported networks: ${getSupportedNetworks().length} networks`);
+    console.error(`Authentication: Bearer token with private key`);
     console.error("Server is ready to handle requests");
 
     return server;

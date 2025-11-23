@@ -188,15 +188,40 @@ The server uses the following environment variables. For write operations and AB
 
 #### Wallet Configuration (For Write Operations)
 
-You can configure your wallet using **either** a private key or a mnemonic phrase:
+The MCP server supports **two authentication methods** for wallet operations:
 
-**Option 1: Private Key**
+**Option 1: Session-Based Authentication (Recommended for Multi-User Scenarios)**
+
+When connecting to the MCP server via HTTP, you can provide your private key in the Authorization header using Bearer token authentication. This allows each client to use their own private key without needing to configure environment variables:
+
+```bash
+# When making HTTP requests, include the Authorization header:
+Authorization: Bearer <your-private-key-hex>
+
+# Example using curl:
+curl -X POST http://localhost:3001/mcp \
+  -H "Authorization: Bearer 0x1234567890abcdef..." \
+  -H "Content-Type: application/json" \
+  -d '{"method": "tools/list"}'
+```
+
+**Benefits:**
+- Each user/session can have their own Ethereum account
+- No need to share or configure server-side environment variables
+- More secure for multi-tenant scenarios
+- Private keys are stored only in memory for the duration of the session
+
+**Option 2: Environment Variables (For Single-User/Development)**
+
+You can configure your wallet using **either** a private key or a mnemonic phrase via environment variables:
+
+**Using Private Key**
 
 ```bash
 export EVM_PRIVATE_KEY="0x..." # Your private key in hex format (with or without 0x prefix)
 ```
 
-**Option 2: Mnemonic Phrase (Recommended for HD Wallets)**
+**Using Mnemonic Phrase (For HD Wallets)**
 
 ```bash
 export EVM_MNEMONIC="word1 word2 word3 ... word12" # Your 12 or 24 word BIP-39 mnemonic
@@ -215,11 +240,13 @@ The mnemonic option supports hierarchical deterministic (HD) wallet derivation:
 - Approving token spending (`approve_token_spending` tool)
 - Writing to smart contracts (`write_contract` tool)
 
-⚠️ **Security**: 
-- Never commit your private key or mnemonic to version control
+⚠️ **Security**:
+- **Session-based:** Private keys are validated and stored in memory only for the session duration
+- **Environment-based:** Never commit your private key or mnemonic to version control
 - Use environment variables or a secure key management system
 - Store mnemonics securely - they provide access to all derived accounts
 - Consider using different account indices for different purposes
+- For production, always use HTTPS when sending private keys in Bearer tokens
 
 #### API Keys (For ABI Fetching)
 
