@@ -6,6 +6,7 @@
     "db:down": "bun run ./db/down.ts"
   },
   "dependencies": {
+    "@ai-sdk/mcp": "^0.0.8",
     "@ai-sdk/openai": "^2.0.71",
     "@filoz/synapse-sdk": "^0.36.0",
     "@google/genai": "^1.30.0",
