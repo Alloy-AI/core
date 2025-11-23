@@ -7,6 +7,8 @@ import {
   jsonb,
   timestamp,
   index,
+  boolean,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const agents = pgTable(
@@ -97,11 +99,50 @@ export const agentCards = pgTable(
   }),
 );
 
+export const mcpServers = pgTable(
+  "mcp_servers",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    url: varchar("url", { length: 500 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    idIdx: index("idx_mcp_servers_id").on(table.id),
+  }),
+);
+
+export const selectedMcp = pgTable(
+  "selected_mcp",
+  {
+    id: serial("id").primaryKey(),
+    agentId: integer("agent_id")
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
+    mcpId: integer("mcp_id")
+      .notNull()
+      .references(() => mcpServers.id, { onDelete: "cascade" }),
+    authToken: text("auth_token"),
+    isActive: boolean("is_active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    agentIdIdx: index("idx_selected_mcp_agent_id").on(table.agentId),
+    mcpIdIdx: index("idx_selected_mcp_mcp_id").on(table.mcpId),
+    isActiveIdx: index("idx_selected_mcp_is_active").on(table.isActive),
+    uniqueAgentMcp: unique().on(table.agentId, table.mcpId),
+  }),
+);
+
 const schema = {
   agents,
   chats,
   chatHistory,
   agentCards,
+  mcpServers,
+  selectedMcp,
 };
 
 export default schema;
