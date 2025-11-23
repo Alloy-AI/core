@@ -66,8 +66,11 @@ export class Agent implements IAgent {
     }
     const agentDescriptor: AgentDescriptor = {
       id: agentData.id,
+      imageUrl: agentData.imageUrl,
+      description: agentData.description,
       model: agentData.model,
       keySeed: agentData.keySeed,
+      ens: agentData.ens,
       registrationPieceCid: agentData.registrationPieceCid,
       registration: registration,
       baseSystemPrompt: agentData.baseSystemPrompt,
@@ -91,8 +94,8 @@ export class Agent implements IAgent {
   }
 
   protected constructor(
-    private agentDescriptor: AgentDescriptor,
-    private privateKey: Hex,
+    public agentDescriptor: AgentDescriptor,
+    public privateKey: Hex,
   ) {}
 
   async generateResponse(args: {

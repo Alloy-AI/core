@@ -7,8 +7,14 @@ export interface IAgent {
 export type AgentDescriptor = {
   id: number;
 
+  imageUrl: string;
+
+  description: string | null;
+
   model: string;
   keySeed: string;
+
+  ens: string;
 
   registrationPieceCid: string;
   registration: {

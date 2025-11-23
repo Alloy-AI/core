@@ -19,6 +19,7 @@ import schema from "../db/schema";
 import { eq } from "drizzle-orm";
 import NameStone from "@namestone/namestone-sdk";
 import { env } from "../env";
+import { updateAgentEnsStatus } from "../lib/ens";
 
 const slugify = (str: string) => {
   return str
@@ -56,6 +57,8 @@ app.post("/message", async (ctx) => {
   const { message, agentId } = parsedBody.data;
 
   const agent = await Agent.fromId({ id: Number(agentId) });
+
+  await updateAgentEnsStatus(agent, "TASK_STATE_RUNNING");
 
   const response = await agent.generateResponse({ message });
 
@@ -178,6 +181,7 @@ app.post("/", authenticated, async (c) => {
       description: opts.description,
       website: "alloy.ai",
       location: "World Alloy",
+      status: "TASK_STATE_UNSPECIFIED",
     },
   });
 
