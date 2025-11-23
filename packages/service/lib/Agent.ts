@@ -1,9 +1,7 @@
 import { experimental_createMCPClient } from "@ai-sdk/mcp";
 import type { AgentDescriptor, IAgent } from "../types/agent";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import db from "../db/client";
-import { eq } from "drizzle-orm";
-import schema from "../db/schema";
+import { getChatHistory } from "../db/client";
 
 export class Agent implements IAgent {
   static async fromId({ id }: { id: string }) {

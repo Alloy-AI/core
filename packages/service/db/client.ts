@@ -3,7 +3,7 @@ import { eq, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { env } from "../env";
 import * as schema from "./schema";
 
-const db: NodePgDatabase<typeof schema> = drizzle(env.PG_URI, {
+export const db: NodePgDatabase<typeof schema> = drizzle(env.PG_URI, {
   schema,
   casing: "snake_case",
 });
