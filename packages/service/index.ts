@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import { db } from "./db/client";
-import { getAgent } from "../lib/a2a";
-import { appd } from "../lib/appd";
-import { respond } from "../lib/Router";
+import { getAgent } from "./lib/a2a";
+import { appd } from "./lib/appd";
+import { respond } from "./lib/Router";
 import agents from "./routes/agents";
 import chats from "./routes/chats";
+import { env } from "./env";
 
 const app = new Hono();
 
@@ -223,6 +224,6 @@ app.post("/a2a/rpc", async (c) => {
 });
 
 const _server = Bun.serve({
-  port: 3000,
+  port: env.PORT,
   fetch: app.fetch,
 });
