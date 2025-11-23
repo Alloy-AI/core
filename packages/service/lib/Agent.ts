@@ -1,12 +1,11 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { generateText, type ToolSet } from "ai";
+import { experimental_createMCPClient } from "@ai-sdk/mcp";
 import { db } from "../db/client";
 import type { AgentDescriptor, IAgent } from "../types/agent";
-import { MCPClient } from "./mcpClient";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 export class Agent implements IAgent {
-  private mcpClient: MCPClient;
-
   static async fromId({ id }: { id: string }) {
     const agentData = await db.getAgent({ id });
 
@@ -21,6 +20,7 @@ export class Agent implements IAgent {
     const agentDescriptor: AgentDescriptor = {
       id: agentData.id,
       model: agentData.model,
+      keySeed: agentData.keySeed,
       registrationPieceCid: agentData.registrationPieceCid,
       registration: registration,
       baseSystemPrompt: agentData.baseSystemPrompt,
@@ -32,9 +32,7 @@ export class Agent implements IAgent {
     return new Agent(agentDescriptor);
   }
 
-  protected constructor(private agentDescriptor: AgentDescriptor) {
-    this.mcpClient = new MCPClient();
-  }
+  protected constructor(private agentDescriptor: AgentDescriptor) {}
 
   async generateResponse(args: {
     message: string;
@@ -46,7 +44,6 @@ export class Agent implements IAgent {
       this.agentDescriptor?.mcpServers &&
       this.agentDescriptor.mcpServers.length > 0
     ) {
-      await this.mcpClient.connectToServers(this.agentDescriptor.mcpServers);
     }
 
     const messages: Array<{
@@ -80,33 +77,29 @@ export class Agent implements IAgent {
 
     messages.push({ role: "user", content: message });
 
-    const mcpTools = await this.mcpClient.getAvailableTools();
-    const tools: Record<string, any> = {};
-
-    for (const mcpTool of mcpTools) {
-      const mcpToolName = mcpTool.name;
-      tools[mcpToolName] = {
-        description: mcpTool.description,
-        parameters: mcpTool.inputSchema.properties || {},
-        execute: async (args: any) => {
-          return await this.mcpClient.callTool(mcpToolName, args);
-        },
-      };
+    const tools: ToolSet = {};
+    for (const mcp of this.agentDescriptor.mcpServers) {
+      const mcpClient = await experimental_createMCPClient({
+        transport: new StreamableHTTPClientTransport(new URL(mcp.url), {
+          requestInit: { headers: mcp.authHeaders },
+        }),
+      });
+      const mcpTools = await mcpClient.tools();
+      Object.assign(tools, mcpTools);
     }
 
     const llm = createOpenAI({
       apiKey: process.env.GROQ_API_KEY,
       baseURL: "https://api.groq.com/openai/v1",
     });
-
     const { text } = await generateText({
       model: llm(this.agentDescriptor.model),
       messages: messages,
       temperature: 0.7,
-      tools: Object.keys(tools).length > 0 ? tools : undefined,
+      tools: tools,
     });
 
-    await this.mcpClient.disconnect();
+    // await this.mcpClient.disconnect();
 
     return text;
   }

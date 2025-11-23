@@ -13,6 +13,7 @@ import { getOrCreateDataset, serverAddressSynapse } from "../lib/synapse";
 import { tryCatch } from "../lib/tryCatch";
 import { authenticated } from "../middleware/auth";
 import type { AgentDescriptor, EIP155Address } from "../types/agent";
+import { Agent } from "../lib/Agent";
 
 const app = new Hono();
 
@@ -20,6 +21,26 @@ app.get("/", authenticated, async (c) => {
   const agents = await db.getAllAgents({});
   return respond.ok(c, { agents }, "Agents retrieved successfully", 200);
 });
+
+app.post("/message", async (ctx) => {
+    const body = await ctx.req.json();
+    const parsedBody = z.object({
+        message: z.string().min(1),
+        agentId: z.string().min(1),
+    }).safeParse(body);
+
+    if (!parsedBody.success) {
+        return ctx.json({ error: `Invalid request body ${parsedBody.error.message}` }, { status: 400 });
+    }
+
+    const { message, agentId } = parsedBody.data;
+
+    const agent = await Agent.fromId({ id: agentId });
+    if(agent.)
+    const response = await agent.generateResponse({ message });
+
+    return respond.ok(ctx, { response }, "Respsne generated sucesffulyy", 200);
+})
 
 app.post("/", authenticated, async (c) => {
   const body = await tryCatch(c.req.json());
@@ -279,40 +300,6 @@ app.get("/:id", authenticated, async (c) => {
   }
 
   return respond.ok(c, { agent }, "Agent details retrieved successfully", 200);
-});
-
-app.patch("/:id", authenticated, async (c) => {
-  const id = c.req.param("id");
-  const body = await c.req.json();
-
-  const updatePayload = {
-    id,
-    updates: body,
-  };
-
-  const agent = await db.getAgent({ id });
-  if (!agent) {
-    return respond.err(c, "Agent not found", 404);
-  }
-
-  await db.updateAgent(updatePayload);
-  return respond.ok(c, { id }, "Agent updated successfully", 200);
-});
-
-app.delete("/:id", authenticated, async (c) => {
-  const id = c.req.param("id");
-  const agent = await db.getAgent({ id });
-
-  if (!agent) {
-    return respond.err(c, "Agent not found", 404);
-  }
-
-  await db.deleteAgent({ id });
-  return respond.ok(c, { id }, "Agent deleted successfully", 200);
-});
-
-app.get("/:id/pk", (c) => {
-  return respond.ok(c, { status: "ok" }, "", 200);
 });
 
 app.put("/:id/base-system-prompt", authenticated, async (c) => {
