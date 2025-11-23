@@ -248,6 +248,9 @@ app.post("/", authenticated, async (c) => {
         address: agentAddress,
         description: opts.description,
         model: opts.model,
+        imageUrl: filecoinUrl,
+        //@yashgo0018
+        // ens: opts.ens,
         baseSystemPrompt: opts.baseSystemPrompt,
         registrationPieceCid: registrationPieceCid.toString(),
         knowledgeBases: [],
@@ -275,7 +278,7 @@ app.post("/", authenticated, async (c) => {
 // AgentCard endpoint - well-known path for agent discovery by address
 app.get("/:address/.well-known/agent-card.json", async (ctx) => {
   const address = ctx.req.param("address");
-  
+
   // Find agent by address
   const [agent] = await db
     .select()
@@ -314,7 +317,12 @@ app.get("/:address/registration.json", async (ctx) => {
   const registrationBytes = await ds.download(registrationPieceCid);
   const registration = jsonParse(new TextDecoder().decode(registrationBytes));
 
-  return respond.ok(ctx, registration, "Registration retrieved successfully", 200);
+  return respond.ok(
+    ctx,
+    registration,
+    "Registration retrieved successfully",
+    200,
+  );
 });
 
 app.get("/:id", authenticated, async (c) => {
