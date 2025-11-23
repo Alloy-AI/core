@@ -2,7 +2,7 @@
   "name": "@alloy/executor",
   "scripts": {
     "oasis:push": "docker compose build; oasis rofl update; oasis rofl build; oasis rofl update; oasis rofl deploy",
-    "db:migrate": "bun run ./db/migrate.ts",
+    "db:migrate": "bunx --bun drizzle-kit push",
     "db:down": "bun run ./db/down.ts"
   },
   "dependencies": {
@@ -15,10 +15,15 @@
     "@web3-storage/data-segment": "^5.3.0",
     "ai": "^5.0.99",
     "axios": "^1.13.2",
+    "drizzle-orm": "^0.44.7",
     "fast-json-stable-stringify": "^2.1.0",
     "hono": "^4.10.6",
     "multiformats": "^13.4.1",
+    "pg": "^8.16.3",
     "viem": "^2.39.3",
     "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.7"
   }
 }

@@ -10,12 +10,13 @@ export const env = z
     PORT: z
       .string()
       .default("3000")
-      .transform((port) => parseInt(port)),
+      .transform((port) => parseInt(port, 10)),
     EVM_PRIVATE_KEY_SYNAPSE: z
       .string()
       .startsWith("0x")
       .transform((key) => key as `0x${string}`),
     GEMINI_API_KEY: z.string(),
+    ALCHEMY_API_KEY: z.string(),
   })
   .parse(envRaw);
 

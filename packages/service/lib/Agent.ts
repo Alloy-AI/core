@@ -1,13 +1,16 @@
 import { experimental_createMCPClient } from "@ai-sdk/mcp";
-import { createOpenAI } from "@ai-sdk/openai";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { generateText, type ToolSet } from "ai";
-import { db } from "../db/client";
 import type { AgentDescriptor, IAgent } from "../types/agent";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import db from "../db/client";
+import { eq } from "drizzle-orm";
+import schema from "../db/schema";
 
 export class Agent implements IAgent {
   static async fromId({ id }: { id: string }) {
-    const agentData = await db.getAgent({ id });
+    const [agentData] = await db
+      .select()
+      .from(schema.agents)
+      .where(eq(schema.agents.id, Number(id)));
 
     if (!agentData) {
       throw new Error(`Agent with ID ${id} not found`);
@@ -18,14 +21,18 @@ export class Agent implements IAgent {
       throw new Error(`Registration for agent ${agentData.id} not found`);
     }
     const agentDescriptor: AgentDescriptor = {
-      id: agentData.id,
+      id: String(agentData.id),
       model: agentData.model,
       keySeed: agentData.keySeed,
       registrationPieceCid: agentData.registrationPieceCid,
       registration: registration,
       baseSystemPrompt: agentData.baseSystemPrompt,
-      knowledgeBases: agentData.knowledgeBases || [],
-      tools: agentData.tools || [],
+      knowledgeBases: (Array.isArray(agentData.knowledgeBases)
+        ? agentData.knowledgeBases
+        : []) as AgentDescriptor["knowledgeBases"],
+      tools: (Array.isArray(agentData.tools)
+        ? agentData.tools
+        : []) as AgentDescriptor["tools"],
       mcpServers: (agentData.mcpServers || []) as AgentDescriptor["mcpServers"],
     };
 

@@ -1,8 +1,6 @@
 import { Hono } from "hono";
 import { privateKeyToAddress } from "viem/accounts";
 import z from "zod";
-import { db } from "../db/client";
-import { Agent } from "../lib/Agent";
 import { appd } from "../lib/appd";
 import { identityRegistry } from "../lib/erc80004.defs";
 import { getEvmClient, isSupportedChain } from "../lib/evm";
@@ -14,11 +12,14 @@ import { getOrCreateDataset, serverAddressSynapse } from "../lib/synapse";
 import { tryCatch } from "../lib/tryCatch";
 import { authenticated } from "../middleware/auth";
 import type { AgentDescriptor, EIP155Address } from "../types/agent";
+import { Agent } from "../lib/Agent";
+import db from "../db/client";
+import schema from "../db/schema";
 
 const app = new Hono();
 
 app.get("/", authenticated, async (c) => {
-  const agents = await db.getAllAgents({});
+  const agents = await db.select().from(schema.agents);
   return respond.ok(c, { agents }, "Agents retrieved successfully", 200);
 });
 
@@ -248,6 +249,7 @@ app.post("/", authenticated, async (c) => {
       agentData: {
         name: opts.name,
         keySeed: agentSeed,
+        address: agentAddress,
         description: opts.description,
         model: opts.model,
         baseSystemPrompt: opts.baseSystemPrompt,
@@ -278,7 +280,7 @@ app.post("/", authenticated, async (c) => {
 //@jriyyya
 app.get("/:address/.well-known/agent-card.json", async (ctx) => {
   const address = ctx.req.param("address");
-  const agent = await db.getAgent({ id: address });
+  const agent = await db.getAgent({ address: address });
 
   if (!agent) {
     return ctx.json({ error: "Agent not found" }, { status: 404 });

@@ -9,6 +9,7 @@ import a2a from "./routes/a2a";
 import agents from "./routes/agents";
 import chats from "./routes/chats";
 import tools from "./routes/tools";
+import { privateKeyToAddress } from "viem/accounts";
 
 const app = new Hono();
 
@@ -19,8 +20,9 @@ app.get("/app-id", (c) => {
   return respond.ok(c, { appId: appd.getAppId() }, "", 200);
 });
 
-app.get("/evm-address", (c) => {
-  return respond.ok(c, { address: appd.getEvmSecretKey("global") }, "", 200);
+app.get("/evm-address", async (c) => {
+  const pvtKey = await appd.getEvmSecretKey("global");
+  return respond.ok(c, { address: privateKeyToAddress(pvtKey) }, "", 200);
 });
 
 app.route("/", a2a);

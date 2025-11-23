@@ -11,6 +11,9 @@ async function main() {
     },
   });
 
+  const teeWallet = api.get("/evm-address");
+  console.log("Tee Wallet Address:", (await teeWallet).data);
+
   const agentCreationResponse = await api.post("/agents", {
     name: "Test Agent",
     description: "An agent for testing purposes",
@@ -21,7 +24,7 @@ async function main() {
 
   console.log("Agent Creation Response:", agentCreationResponse.data);
 
-  const agentId = agentCreationResponse.data.agent.id;
+  const agentId = agentCreationResponse.data.data.agentId;
 
   const messageResponse = await api.post("/agents/message", {
     agentId,
