@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 import {
   getAgentCard,
   handleJsonRpc,
@@ -8,6 +9,8 @@ import {
 } from "../lib/a2a";
 import { respond } from "../lib/Router";
 import { CreateAgentCardSchema, UpdateAgentCardSchema } from "../lib/zod";
+import db from "../db/client";
+import schema from "../db/schema";
 
 const app = new Hono();
 
@@ -68,12 +71,13 @@ app.post("/agents/:id/a2a", async (c) => {
 });
 
 app.post("/a2a", async (c) => {
-  const agentId =
-    c.req.query("agentId") ||
-    c.req.header("x-agent-id") ||
-    c.req.header("agent-id");
+  // Get address from query param or header
+  const address =
+    c.req.query("address") ||
+    c.req.header("x-agent-address") ||
+    c.req.header("agent-address");
 
-  if (!agentId) {
+  if (!address) {
     return c.json(
       {
         jsonrpc: "2.0",
@@ -81,10 +85,31 @@ app.post("/a2a", async (c) => {
         error: {
           code: -32602,
           message:
-            "Agent ID required (query param 'agentId' or header 'x-agent-id')",
+            "Agent address required (query param 'address' or header 'x-agent-address')",
         },
       },
       400,
+    );
+  }
+
+  // Look up agent by address to get agent ID
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.address, address))
+    .limit(1);
+
+  if (!agent) {
+    return c.json(
+      {
+        jsonrpc: "2.0",
+        id: null,
+        error: {
+          code: -32001,
+          message: `Agent with address ${address} not found`,
+        },
+      },
+      404,
     );
   }
 
@@ -105,8 +130,8 @@ app.post("/a2a", async (c) => {
     );
   }
 
-  // Handle JSON-RPC methods
-  const response = await handleJsonRpc(agentId, body);
+  // Handle JSON-RPC methods using the agent ID
+  const response = await handleJsonRpc(agent.id.toString(), body);
   return c.json(response, 200);
 });
 
