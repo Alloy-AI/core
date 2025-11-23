@@ -12,6 +12,11 @@ services:
       - NODE_ENV=${NODE_ENV}
       - PG_URI=${PG_URI}
       - GROQ_API_KEY=${GROQ_API_KEY}
+      - PORT=${PORT}
+      - EVM_PRIVATE_KEY_SYNAPSE=${EVM_PRIVATE_KEY_SYNAPSE}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ALCHEMY_API_KEY=${ALCHEMY_API_KEY}
+      - EVM_MCP_SERVER_URL=${EVM_MCP_SERVER_URL}
 
   evm-mcp-server:
     build: ../evm-mcp-server

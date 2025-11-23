@@ -1,7 +1,7 @@
 {
   "name": "@alloy/executor",
   "scripts": {
-    "oasis:push": "docker compose build; docker compose push; oasis rofl update; oasis rofl build; oasis rofl update; oasis rofl deploy",
+    "oasis:push": "docker compose build; docker compose push; oasis rofl update; ./push-secrets; oasis rofl build; oasis rofl update; oasis rofl deploy",
     "db:migrate": "bunx --bun drizzle-kit push",
     "db:down": "bun run ./db/down.ts"
   },

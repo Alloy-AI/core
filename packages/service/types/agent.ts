@@ -74,25 +74,3 @@ type RegistrationEndpoint =
       name: "ENS";
       endpoint: string;
     };
-
-type MCPConnectionInfo =
-  | MCPWebSocketConnection
-  | MCPHttpConnection
-  | MCPCustomConnection;
-
-type MCPWebSocketConnection = {
-  url: string;
-  headers?: Record<string, string>;
-};
-
-/// I would consider removing streams depending upon how difficult they are to implement, for now aassume no streaming and awaiting the entire resposne
-type MCPHttpConnection = {
-  url: string;
-  streaming?: boolean;
-  headers?: Record<string, string>;
-  protocol?: "http" | "sse" | "streamable_http";
-};
-
-type MCPCustomConnection = {
-  [key: string]: unknown; // your own schema
-};
