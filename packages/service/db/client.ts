@@ -24,8 +24,9 @@ import {
   UpdateAgentSchema,
 } from "../lib/zod";
 import type { AgentDescriptor } from "../types/agent";
+import { env } from "../env";
 
-const sql = new SQL("");
+const sql = new SQL(env.PG_URI);
 
 type AgentData = Omit<AgentDescriptor, "registration" | "id">;
 

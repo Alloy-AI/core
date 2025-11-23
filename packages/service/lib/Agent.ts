@@ -6,7 +6,6 @@ import type { AgentDescriptor, IAgent } from "../types/agent";
 import { MCPClient } from "./mcpClient";
 
 export class Agent implements IAgent {
-  private groq: ReturnType<typeof createOpenAI>;
   private mcpClient: MCPClient;
 
   static async fromId({ id }: { id: string }) {
@@ -35,10 +34,6 @@ export class Agent implements IAgent {
   }
 
   protected constructor(private agentDescriptor: AgentDescriptor) {
-    this.groq = createOpenAI({
-      baseURL: "https://api.groq.com/openai/v1",
-      apiKey: process.env.GROQ_API_KEY,
-    });
     this.mcpClient = new MCPClient();
   }
 
@@ -107,9 +102,13 @@ export class Agent implements IAgent {
       };
     }
 
+    const llm = createOpenAI({
+        apiKey: process.env.GROQ_API_KEY,
+        baseURL: "https://api.groq.com/openai/v1",
+    })
 
     const { text } = await generateText({
-      model: this.groq("llama-3.3-70b-versatile"),
+      model: llm("llama-3.3-70b-versatile"),
       messages: messages,
       temperature: 0.7,
       tools: Object.keys(tools).length > 0 ? tools : undefined,
