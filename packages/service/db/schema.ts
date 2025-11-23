@@ -32,6 +32,42 @@ export const agents = pgTable(
   }),
 );
 
+export const knowledges = pgTable(
+  "knowledges",
+  {
+    id: serial("id").primaryKey(),
+    walletAddress: varchar("wallet_address", { length: 255 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    pieceCid: varchar("piece_cid", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    walletAddressIdx: index("idx_knowledges_wallet_address").on(
+      table.walletAddress,
+    ),
+  }),
+);
+
+export const agentKnowledge = pgTable(
+  "agent_knowledge",
+  {
+    id: serial("id").primaryKey(),
+    agentId: integer("agent_id")
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
+    knowledgeId: integer("knowledge_id")
+      .notNull()
+      .references(() => knowledges.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    agentIdIdx: index("idx_agent_knowledge_agent_id").on(table.agentId),
+    knowledgeIdIdx: index("idx_agent_knowledge_knowledge_id").on(
+      table.knowledgeId,
+    ),
+  }),
+);
+
 export const chats = pgTable(
   "chats",
   {
@@ -137,6 +173,8 @@ export const selectedMcp = pgTable(
 
 const schema = {
   agents,
+  knowledges,
+  agentKnowledge,
   chats,
   chatHistory,
   agentCards,
