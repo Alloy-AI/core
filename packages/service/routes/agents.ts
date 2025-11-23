@@ -304,8 +304,7 @@ app.post("/", authenticated, async (c) => {
         description: opts.description,
         model: opts.model,
         imageUrl: filecoinUrl,
-        //@yashgo0018
-        // ens: opts.ens,
+        ens: domain,
         baseSystemPrompt: opts.baseSystemPrompt,
         registrationPieceCid: registrationPieceCid.toString(),
         knowledgeBases: [],
