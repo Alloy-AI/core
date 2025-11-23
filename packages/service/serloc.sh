@@ -16,11 +16,20 @@ if [ ! -f .env ]; then
     echo "GROQ_API_KEY=..."
     echo "GEMINI_API_KEY=..."
     echo "EVM_PRIVATE_KEY_SYNAPSE=0x..."
+    echo "ALCHEMY_API_KEY=..."
     exit 1
 fi
 
 # Load env vars
 export $(grep -v '^#' .env | xargs)
+
+# 1.5 Install Dependencies
+echo -e "${GREEN}📦 Installing dependencies...${NC}"
+bun install
+if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Dependency installation failed!${NC}"
+    exit 1
+fi
 
 # 2. Check DB Connection
 DB_NAME=$(echo $PG_URI | sed -n 's/.*\/\([^?]*\).*/\1/p')
