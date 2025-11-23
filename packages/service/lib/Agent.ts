@@ -6,7 +6,10 @@ import { eq } from "drizzle-orm";
 import schema from "../db/schema";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import type { ToolSet } from "ai";
+import { env } from "../env";
+import type { Hex } from "viem";
+import { tryCatch } from "./tryCatch";
+import { appd } from "./appd";
 
 export class Agent implements IAgent {
   static async fromId({ id }: { id: number }) {
@@ -35,22 +38,29 @@ export class Agent implements IAgent {
       mcpServers: (agentData.mcpServers || []) as AgentDescriptor["mcpServers"],
     };
 
-    return new Agent(agentDescriptor);
+    const agentPvtKeyResult = await tryCatch(
+      appd.getEvmSecretKey(agentData.keySeed),
+    );
+    if (agentPvtKeyResult.error) {
+      throw new Error(
+        `Failed to get agent private key: ${agentPvtKeyResult.error}`,
+      );
+    }
+    const agentPvtKey = agentPvtKeyResult.data;
+
+    return new Agent(agentDescriptor, agentPvtKey);
   }
 
-  protected constructor(private agentDescriptor: AgentDescriptor) {}
+  protected constructor(
+    private agentDescriptor: AgentDescriptor,
+    private privateKey: Hex,
+  ) {}
 
   async generateResponse(args: {
     message: string;
     chatId?: string;
   }): Promise<string> {
     const { message, chatId } = args;
-
-    if (
-      this.agentDescriptor?.mcpServers &&
-      this.agentDescriptor.mcpServers.length > 0
-    ) {
-    }
 
     const messages: Array<{
       role: "system" | "user" | "assistant";
@@ -86,7 +96,18 @@ export class Agent implements IAgent {
 
     messages.push({ role: "user", content: message });
 
-    const tools: ToolSet = {};
+    const evmMcpClient = await experimental_createMCPClient({
+      transport: new StreamableHTTPClientTransport(
+        new URL(env.EVM_MCP_SERVER_URL),
+        {
+          requestInit: {
+            headers: { Authorization: `Bearer ${this.privateKey}` },
+          },
+        },
+      ),
+    });
+    const tools = await evmMcpClient.tools();
+
     for (const mcp of this.agentDescriptor.mcpServers) {
       const mcpClient = await experimental_createMCPClient({
         transport: new StreamableHTTPClientTransport(new URL(mcp.url), {

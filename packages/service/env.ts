@@ -17,6 +17,7 @@ export const env = z
       .transform((key) => key as `0x${string}`),
     GEMINI_API_KEY: z.string(),
     ALCHEMY_API_KEY: z.string(),
+    EVM_MCP_SERVER_URL: z.string(),
   })
   .parse(envRaw);
 
