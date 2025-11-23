@@ -59,6 +59,7 @@ type AgentRowType = {
   name: string;
   description: string;
   model: string;
+  key_seed: string;
   registration_piece_cid: string;
   base_system_prompt: string;
   knowledge_bases: string;
@@ -69,6 +70,7 @@ type AgentRowType = {
 type DBAgentType = {
   id: string;
   name: string;
+  keySeed: string;
   description: string;
   model: string;
   registrationPieceCid: string;
@@ -217,6 +219,7 @@ async function getAgent(args: { id?: string; address?: string }) {
     name: row.name,
     description: row.description,
     model: row.model,
+    keySeed: row.key_seed,
     registrationPieceCid: row.registration_piece_cid,
     baseSystemPrompt: row.base_system_prompt,
     knowledgeBases: JSON.parse(row.knowledge_bases),
