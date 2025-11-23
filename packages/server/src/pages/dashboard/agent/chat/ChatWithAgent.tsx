@@ -1,215 +1,137 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { useState } from "react";
-import { formatEther } from "viem";
+import { useState, useEffect } from "react";
 import Icon from "@/src/lib/components/custom/Icon";
 import { Button } from "@/src/lib/components/ui/button";
 import { Skeleton } from "@/src/lib/components/ui/skeleton";
-import { useHaitheApi } from "@/src/lib/hooks/use-haithe-api";
-import { useChatStore, useStore } from "@/src/lib/hooks/use-store";
-import FundOrgDialog from "../../FundOrg";
+import {
+  useAgent,
+  useChats,
+  useChatHistory,
+  useCreateChat,
+  useSendMessage,
+} from "@/src/lib/hooks/use-api";
 import Layout from "../../layout";
 import ChatArea from "./components/ChatArea";
 import ChatHeader from "./components/ChatHeader";
 import ChatInput from "./components/ChatInput";
 
 export default function ChatWithAgent() {
-  const { id } = useParams({
-    from: "/dashboard/agents/$id/chat",
+  const { agentId } = useParams({
+    from: "/dashboard/agent/$agentId/chat",
   });
 
-  const haithe = useHaitheApi();
-  const { selectedOrg } = useStore();
-  const { selectedModel } = useChatStore();
-  const queryClient = useQueryClient();
-
-  console.log({
-    selectedOrg,
-  });
-
-  const [currentConversationId, setCurrentConversationId] = useState<
-    number | null
-  >(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
 
   // Get agent data
-  const agentsQuery = haithe.getProjects(Number(selectedOrg?.id));
-  const agent = agentsQuery.data?.find((a) => a.id.toString() === id);
+  const {
+    data: agent,
+    isLoading: isLoadingAgent,
+    isError: isErrorAgent,
+  } = useAgent(agentId || "");
 
-  // Get enabled models for the organization
-  const enabledModelsQuery = haithe.getEnabledModels(Number(selectedOrg?.id));
+  // Get all chats
+  const { data: chats, isLoading: isLoadingChats } = useChats();
 
-  // Get organization balance
-  const balanceQuery = haithe.organizationBalance(Number(selectedOrg?.id));
+  // Get messages for current chat
+  const {
+    data: messages,
+    isLoading: isLoadingMessages,
+  } = useChatHistory(currentChatId || "");
 
-  // Get total price per call for all enabled products of this agent
-  const pricePerCallQuery = haithe.pricePerCall(Number(id));
+  // Mutations
+  const { mutate: createChat, isPending: isCreatingChat } = useCreateChat();
+  const { mutate: sendMessage, isPending: isSendingMessage } = useSendMessage();
 
-  // Get conversations for this agent
-  const conversationsQuery = haithe.getConversations(
-    selectedOrg?.organization_uid || "",
-    agent?.project_uid || "",
-  );
+  // Filter chats for this agent
+  const agentChats =
+    chats?.filter((chat) => chat.agentId?.toString() === agentId) || [];
 
-  // Get messages for current conversation
-  const messagesQuery = haithe.getConversationMessages(
-    currentConversationId || 0,
-    selectedOrg?.organization_uid || "",
-    agent?.project_uid || "",
-  );
-
-  // Create conversation mutation
-  const createConversationMutation = haithe.createConversation;
-  const createMessageMutation = haithe.createMessage;
-  const getCompletionsMutation = haithe.getCompletions;
-
-  const sendMessage = async (content: string) => {
-    if (!content.trim() || isLoading || !selectedOrg || !agent) return;
-
-    setIsLoading(true);
-
-    try {
-      let conversationId = currentConversationId;
-
-      // If no conversation exists, create one
-      if (!conversationId) {
-        const newConversation = await createConversationMutation.mutateAsync({
-          orgUid: selectedOrg.organization_uid,
-          projectUid: agent.project_uid,
-        });
-        conversationId = newConversation.id;
-        setCurrentConversationId(conversationId);
-      }
-
-      // Send the user message
-      const res = await createMessageMutation.mutateAsync({
-        conversationId: conversationId,
-        message: content.trim(),
-        sender: "user",
-        orgUid: selectedOrg.organization_uid,
-        projectUid: agent.project_uid,
-      });
-
-      if (!selectedModel) {
-        throw new Error("No model selected");
-      }
-
-      // Get message history for context (last 10 messages)
-      const messageHistory = messagesQuery.data || [];
-      const recentMessages = messageHistory.slice(-10); // Get last 10 messages
-
-      // Convert message history to OpenAI format
-      const messagesForCompletion = recentMessages.map((msg) => ({
-        role: msg.sender === "user" ? "user" : "assistant",
-        content: msg.message,
-      }));
-
-      // Add the current user message
-      messagesForCompletion.push({
-        role: "user",
-        content: content.trim(),
-      });
-
-      // Get AI completion
-      const completion = await getCompletionsMutation.mutateAsync({
-        orgUid: selectedOrg.organization_uid,
-        projectUid: agent.project_uid,
-        body: {
-          model: selectedModel,
-          messages: messagesForCompletion,
-          temperature: 1,
-        },
-      });
-
-      // Send the AI response as a message
-      if (completion.choices && completion.choices.length > 0) {
-        const aiResponse = completion.choices[0].message.content;
-        await createMessageMutation.mutateAsync({
-          conversationId: conversationId,
-          message: aiResponse,
-          sender: "ai",
-          orgUid: selectedOrg.organization_uid,
-          projectUid: agent.project_uid,
-        });
-      }
-
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({
-        queryKey: [
-          "conversationMessages",
-          conversationId,
-          selectedOrg.organization_uid,
-          agent.project_uid,
-        ],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [
-          "conversations",
-          selectedOrg.organization_uid,
-          agent.project_uid,
-        ],
-      });
-    } catch (error) {
-      console.error("Error sending message:", error);
-    } finally {
-      setIsLoading(false);
+  // Auto-select first chat if available and none selected
+  useEffect(() => {
+    if (
+      !currentChatId &&
+      agentChats.length > 0 &&
+      agentChats[0]?.id &&
+      !isLoadingChats
+    ) {
+      setCurrentChatId(agentChats[0].id);
     }
+  }, [agentChats, currentChatId, isLoadingChats]);
+
+  const handleSendMessage = async (content: string) => {
+    if (!content.trim() || !agentId) return;
+
+    let chatId = currentChatId;
+
+    // If no chat exists, create one
+    if (!chatId) {
+      createChat(
+        { agentId: Number(agentId) },
+        {
+          onSuccess: (response) => {
+            const newChatId = response.data.chatId;
+            setCurrentChatId(newChatId);
+            // Send message after chat is created
+            sendMessage({
+              chatId: newChatId,
+              content: content.trim(),
+            });
+          },
+        },
+      );
+      return;
+    }
+
+    // Send the message
+    sendMessage({
+      chatId,
+      content: content.trim(),
+    });
   };
 
-  const selectConversation = (conversationId: string) => {
-    setCurrentConversationId(parseInt(conversationId));
+  const selectChat = (chatId: string) => {
+    setCurrentChatId(chatId);
   };
 
-  const startNewConversation = () => {
-    setCurrentConversationId(null);
+  const startNewChat = () => {
+    createChat(
+      { agentId: Number(agentId) },
+      {
+        onSuccess: (response) => {
+          setCurrentChatId(response.data.chatId);
+        },
+      },
+    );
   };
 
   const handlePromptClick = (prompt: string) => {
-    sendMessage(prompt);
+    handleSendMessage(prompt);
   };
 
   // Transform API data to component format
-  const messages =
-    messagesQuery.data?.map((msg) => ({
-      id: msg.id.toString(),
-      content: msg.message,
-      isUser: msg.sender === "user",
-      timestamp: new Date(msg.created_at),
+  const transformedMessages =
+    messages?.map((msg) => ({
+      id: msg.id || `${msg.chatId}-${msg.content.slice(0, 10)}`,
+      content: msg.content,
+      isUser: msg.role === "user",
+      timestamp: msg.createdAt ? new Date(msg.createdAt) : new Date(),
     })) || [];
 
-  const conversations =
-    conversationsQuery.data?.map((conv) => ({
-      id: conv.id.toString(),
-      title: conv.title || "New Conversation",
-      lastMessage: "No messages yet", // API doesn't provide this field
-      timestamp: new Date(conv.updated_at || conv.created_at),
-      messageCount: 0, // API doesn't provide this field
-      messages: [], // We don't need to load all messages here
+  const transformedChats =
+    agentChats.map((chat) => ({
+      id: chat.id,
+      title: `Chat ${chat.id.slice(0, 8)}`,
+      lastMessage: "No messages yet",
+      timestamp: new Date(chat.createdAt),
+      messageCount: 0,
+      messages: [],
     })) || [];
 
-  // Check if any models are enabled
-  const hasEnabledModels =
-    enabledModelsQuery.data && enabledModelsQuery.data.length > 0;
-
-  // Get the selected model's price per call
-  const selectedModelData = enabledModelsQuery.data?.find(
-    (model) => model.name === selectedModel,
-  );
-  const modelPricePerCall = selectedModelData?.price_per_call || 0;
-
-  // Get the total price per call for all enabled products of this agent
-  const agentPricePerCall = pricePerCallQuery.data?.total_price_per_call || 0;
-
-  // Total price per call = agent products + LLM model
-  const totalPricePerCall = agentPricePerCall + modelPricePerCall;
-  const organizationBalance = balanceQuery.data?.balance || 0;
-
-  // Check if balance is sufficient for the total price per call
-  const hasSufficientBalance =
-    organizationBalance !== 0 && organizationBalance >= totalPricePerCall;
+  const isLoading = isLoadingAgent || isLoadingChats || isLoadingMessages;
+  const isSending = isSendingMessage || isCreatingChat;
 
   // Loading state
-  if (agentsQuery.isPending) {
+  if (isLoadingAgent) {
     return (
       <Layout>
         <div className="min-h-full bg-background p-4 sm:p-6 space-y-6">
@@ -225,7 +147,7 @@ export default function ChatWithAgent() {
     );
   }
 
-  if (!agent) {
+  if (isErrorAgent || !agent) {
     return (
       <Layout>
         <div className="min-h-full bg-background flex items-center justify-center p-4">
@@ -256,93 +178,52 @@ export default function ChatWithAgent() {
         {/* Chat Header */}
         <ChatHeader
           agent={{
-            id: agent.id.toString(),
+            id: agent.id,
             name: agent.name,
-            description: undefined,
+            description: agent.description,
             status: "online",
           }}
-          conversations={conversations}
-          currentConversationId={currentConversationId?.toString()}
-          onSelectConversation={selectConversation}
-          onNewConversation={startNewConversation}
-          balance={balanceQuery.data}
+          conversations={transformedChats}
+          currentConversationId={currentChatId || undefined}
+          onSelectConversation={selectChat}
+          onNewConversation={startNewChat}
         />
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 ">
+        <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4">
           <ChatArea
-            messages={messages}
-            isLoading={isLoading}
+            messages={transformedMessages}
+            isLoading={isSending}
             agentName={agent.name}
             onPromptClick={handlePromptClick}
           />
 
-          {/* Warning when no models are enabled */}
-          {!hasEnabledModels && enabledModelsQuery.data !== undefined && (
-            <div className="mb-10 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          {/* Warning when no chat is selected */}
+          {!currentChatId && agentChats.length === 0 && (
+            <div className="mb-10 p-4 bg-muted/50 border border-border rounded-lg">
               <div className="flex items-start gap-3">
                 <Icon
-                  name="TriangleAlert"
-                  className="size-5 text-yellow-600 mt-0.5 flex-shrink-0"
+                  name="Info"
+                  className="size-5 text-muted-foreground mt-0.5 flex-shrink-0"
                 />
                 <div className="flex-1">
-                  <h4 className="text-sm font-medium text-yellow-800">
-                    No models enabled
+                  <h4 className="text-sm font-medium text-foreground">
+                    No chat started
                   </h4>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    Your organization needs to enable at least one model to chat
-                    with your agent.
-                    <Link
-                      to="/dashboard/settings"
-                      className="text-yellow-800 underline hover:text-yellow-900 ml-1"
-                    >
-                      Go to settings
-                    </Link>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Start a new conversation by sending a message below.
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Warning when balance is insufficient */}
-          {hasEnabledModels &&
-            !hasSufficientBalance &&
-            balanceQuery.data !== undefined &&
-            selectedModel && (
-              <div className="mb-10 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Icon
-                    name="TriangleAlert"
-                    className="size-5 text-red-600 mt-0.5 flex-shrink-0"
-                  />
-                  <div className="flex items-center justify-between w-full gap-10">
-                    <div>
-                      <h4 className="text-sm font-medium text-red-800">
-                        Insufficient balance
-                      </h4>
-                      <p className="text-sm text-red-700 mt-1">
-                        Your organization balance ($
-                        {formatEther(BigInt(organizationBalance))}) is
-                        insufficient for the total cost per call.
-                      </p>
-                    </div>
-                    {selectedOrg && (
-                      <FundOrgDialog
-                        organization={selectedOrg}
-                        refetchBalance={balanceQuery.refetch}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
           {/* Input Area */}
           <ChatInput
-            onSendMessage={sendMessage}
+            onSendMessage={handleSendMessage}
             placeholder={`Type your message to ${agent.name}...`}
-            disabled={!hasEnabledModels || !hasSufficientBalance}
-            isLoading={isLoading}
+            disabled={false}
+            isLoading={isSending}
           />
         </div>
       </div>

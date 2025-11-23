@@ -4,6 +4,6 @@ import {
 } from "@phosphor-icons/react";
 
 export const menuItems = [
-  { label: "Agents", path: "/agents", icon: RobotIcon },
-  { label: "Extensions", path: "/extensions", icon: PuzzlePieceIcon },
+  { label: "Agents", path: "/dashboard/agents", icon: RobotIcon },
+  { label: "Extensions", path: "/dashboard/extensions", icon: PuzzlePieceIcon },
 ];

@@ -5,7 +5,6 @@ import {
   CodeIcon,
   CopyIcon,
   InfoIcon,
-  MagnifyingGlassIcon,
   PlugsConnectedIcon,
   PlusIcon,
   PuzzlePieceIcon,
@@ -13,7 +12,7 @@ import {
   WarningIcon,
 } from "@phosphor-icons/react";
 import { Link, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/src/lib/components/ui/badge";
 import { Button } from "@/src/lib/components/ui/button";
@@ -21,7 +20,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/src/lib/components/ui/card";
@@ -42,8 +40,15 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/src/lib/components/ui/tabs";
-import { mockAgents, mockExtensions } from "@/src/lib/mock";
-import { cn } from "@/src/lib/utils";
+import { Textarea } from "@/src/lib/components/ui/textarea";
+import { Skeleton } from "@/src/lib/components/ui/skeleton";
+import {
+  useAgent,
+  useUpdateAgentPrompt,
+  useAddTool,
+  useRemoveTool,
+  useToggleTool,
+} from "@/src/lib/hooks/use-api";
 import Layout from "../layout";
 
 export default function AgentDetailsPage() {
@@ -51,11 +56,43 @@ export default function AgentDetailsPage() {
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [memoryEnabled, setMemoryEnabled] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [newPrompt, setNewPrompt] = useState("");
+  const [toolLabel, setToolLabel] = useState("");
+  const [toolKind, setToolKind] = useState<"builtin" | "mcp">("builtin");
+  const [toolRef, setToolRef] = useState("");
+  const [toolConfig, setToolConfig] = useState("{}");
 
-  const agent = mockAgents.find((a) => a.id === agentId);
-  const agentExtensions = mockExtensions; // For now, show all extensions or filter if needed
+  const {
+    data: agent,
+    isLoading,
+    isError,
+    error,
+  } = useAgent(agentId || "");
+  const { mutate: updatePrompt, isPending: isUpdatingPrompt } =
+    useUpdateAgentPrompt();
+  const { mutate: addTool, isPending: isAddingTool } = useAddTool();
+  const { mutate: removeTool, isPending: isRemovingTool } = useRemoveTool();
+  const { mutate: toggleTool, isPending: isTogglingTool } = useToggleTool();
 
-  if (!agent) {
+  // Update prompt state when agent loads
+  useEffect(() => {
+    if (agent?.baseSystemPrompt) {
+      setNewPrompt(agent.baseSystemPrompt);
+    }
+  }, [agent?.baseSystemPrompt]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto space-y-6">
+          <Skeleton className="h-12 w-64" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (isError || !agent) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-[calc(100vh-100px)]">
@@ -64,10 +101,12 @@ export default function AgentDetailsPage() {
               Agent not found
             </h2>
             <p className="text-muted-foreground">
-              The agent you are looking for does not exist.
+              {error instanceof Error
+                ? error.message
+                : "The agent you are looking for does not exist."}
             </p>
             <Button asChild>
-              <Link to="/agents">Back to Agents</Link>
+              <Link to="/dashboard/agents">Back to Agents</Link>
             </Button>
           </div>
         </div>
@@ -113,14 +152,16 @@ export default function AgentDetailsPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
-              <Link to="/agents">
+              <Link to="/dashboard/agents">
                 <ArrowLeftIcon className="mr-2 size-4" />
                 Back to Agents
               </Link>
             </Button>
-            <Button variant="outline">
-              <ChatCircleTextIcon className="mr-2 size-4" />
-              Chat with Agent
+            <Button variant="outline" asChild>
+              <Link to="/dashboard/agent/$agentId/chat" params={{ agentId }}>
+                <ChatCircleTextIcon className="mr-2 size-4" />
+                Chat with Agent
+              </Link>
             </Button>
           </div>
         </div>
@@ -136,25 +177,25 @@ export default function AgentDetailsPage() {
                 Overview
               </TabsTrigger>
               <TabsTrigger
-                value="extensions"
+                value="tools"
                 className="flex items-center gap-2 px-4 py-2"
               >
                 <PuzzlePieceIcon className="size-4" />
-                Extensions
+                Tools
               </TabsTrigger>
               <TabsTrigger
                 value="integrations"
                 className="flex items-center gap-2 px-4 py-2"
               >
                 <PlugsConnectedIcon className="size-4" />
-                Integrations
+                Integrations (NOT IMPLEMENTED)
               </TabsTrigger>
               <TabsTrigger
                 value="api"
                 className="flex items-center gap-2 px-4 py-2"
               >
                 <CodeIcon className="size-4" />
-                API Specs
+                API Specs (NOT IMPLEMENTED)
               </TabsTrigger>
             </TabsList>
           </div>
@@ -171,53 +212,74 @@ export default function AgentDetailsPage() {
                   variant="destructive"
                   size="sm"
                   className="bg-destructive/20 text-destructive hover:bg-destructive/30 border border-destructive/50"
+                  disabled
                 >
                   <TrashIcon className="mr-2 size-4" />
-                  Delete Agent
+                  Delete Agent (NOT IMPLEMENTED)
                 </Button>
               </CardHeader>
               <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">
-                      Project ID
+                      Agent ID
                     </Label>
                     <p className="font-medium text-foreground">{agent.id}</p>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">
-                      Created
+                      Model
                     </Label>
                     <p className="font-medium text-foreground">
-                      {agent.created}
+                      {agent.model || "Not set"}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">
-                      Enabled Extensions
+                      Enabled Tools
                     </Label>
                     <p className="font-medium text-foreground">
-                      {agent.extensions.length} of {mockExtensions.length}
+                      {agent.tools?.filter((t) => t.enabled).length || 0} of{" "}
+                      {agent.tools?.length || 0}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">
-                      Default Model
+                      Registration CID
                     </Label>
-                    <Select defaultValue="gemini-2.0-flash">
-                      <SelectTrigger className="h-8 w-full bg-muted/30 border-border">
-                        <SelectValue placeholder="Select model" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background/90 border-border">
-                        <SelectItem value="gemini-2.0-flash">
-                          Gemini 2.0 Flash
-                        </SelectItem>
-                        <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                        <SelectItem value="claude-3-5-sonnet">
-                          Claude 3.5 Sonnet
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <p className="font-medium text-foreground font-mono text-xs break-all">
+                      {agent.registrationPieceCid || "Not registered"}
+                    </p>
+                  </div>
+                </div>
+
+                <Separator className="bg-border" />
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium text-foreground mb-2 block">
+                      Base System Prompt
+                    </Label>
+                    <div className="flex gap-2">
+                      <Textarea
+                        value={newPrompt}
+                        onChange={(e) => setNewPrompt(e.target.value)}
+                        className="bg-muted/30 border-border text-foreground min-h-[100px] flex-1"
+                        placeholder="You are a helpful assistant."
+                      />
+                      <Button
+                        onClick={() =>
+                          updatePrompt({
+                            id: agentId!,
+                            baseSystemPrompt: newPrompt,
+                          })
+                        }
+                        disabled={isUpdatingPrompt || newPrompt === agent.baseSystemPrompt}
+                        className="h-fit"
+                      >
+                        {isUpdatingPrompt ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -227,7 +289,7 @@ export default function AgentDetailsPage() {
                   <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
                     <div className="space-y-0.5">
                       <Label className="text-base text-foreground">
-                        Search Enabled
+                        Search Enabled (NOT IMPLEMENTED)
                       </Label>
                       <p className="text-xs text-muted-foreground">
                         Web search capabilities
@@ -248,7 +310,7 @@ export default function AgentDetailsPage() {
                   <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
                     <div className="space-y-0.5">
                       <Label className="text-base text-foreground">
-                        Memory Enabled
+                        Memory Enabled (NOT IMPLEMENTED)
                       </Label>
                       <p className="text-xs text-muted-foreground">
                         Conversation memory
@@ -257,6 +319,7 @@ export default function AgentDetailsPage() {
                     <Switch
                       checked={memoryEnabled}
                       onCheckedChange={setMemoryEnabled}
+                      disabled
                     />
                   </div>
                 </div>
@@ -264,99 +327,174 @@ export default function AgentDetailsPage() {
             </Card>
           </TabsContent>
 
-          {/* Extensions Tab */}
-          <TabsContent value="extensions" className="space-y-6">
-            <div className="flex flex-col md:flex-row gap-4 justify-between">
-              <div className="relative w-full md:w-96">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  className="pl-9 bg-background/40 border-border"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[160px] bg-background/40 border-border">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background/90 border-border">
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="knowledge">Knowledge</SelectItem>
-                    <SelectItem value="tools">Tools</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[140px] bg-background/40 border-border">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background/90 border-border">
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="enabled">Enabled</SelectItem>
-                    <SelectItem value="disabled">Disabled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          {/* Tools Tab */}
+          <TabsContent value="tools" className="space-y-6">
+            <Card className="bg-background/40 backdrop-blur-md border-border">
+              <CardHeader>
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <PuzzlePieceIcon className="size-5 text-primary" />
+                  Add New Tool
+                </CardTitle>
+                <CardDescription>
+                  Add a builtin or MCP tool to your agent
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label className="text-sm text-foreground">
+                      Tool Label *
+                    </Label>
+                    <Input
+                      value={toolLabel}
+                      onChange={(e) => setToolLabel(e.target.value)}
+                      placeholder="weather-api"
+                      className="bg-muted/30 border-border"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="text-sm text-foreground">
+                      Tool Kind *
+                    </Label>
+                    <Select
+                      value={toolKind}
+                      onValueChange={(v) =>
+                        setToolKind(v as "builtin" | "mcp")
+                      }
+                    >
+                      <SelectTrigger className="bg-muted/30 border-border">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="builtin">builtin</SelectItem>
+                        <SelectItem value="mcp">mcp</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="text-sm text-foreground">
+                      Tool Ref *
+                    </Label>
+                    <Input
+                      value={toolRef}
+                      onChange={(e) => setToolRef(e.target.value)}
+                      placeholder="weather-api"
+                      className="bg-muted/30 border-border"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="text-sm text-foreground">
+                      Tool Config (JSON)
+                    </Label>
+                    <Textarea
+                      value={toolConfig}
+                      onChange={(e) => setToolConfig(e.target.value)}
+                      placeholder='{}'
+                      className="bg-muted/30 border-border font-mono text-xs min-h-[60px]"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      let parsedConfig = {};
+                      try {
+                        parsedConfig = toolConfig.trim()
+                          ? JSON.parse(toolConfig)
+                          : {};
+                      } catch {
+                        toast.error("Invalid JSON config");
+                        return;
+                      }
+                      addTool({
+                        agentId: agentId!,
+                        tool: {
+                          label: toolLabel,
+                          kind: toolKind,
+                          ref: toolRef,
+                          config: parsedConfig,
+                        },
+                      });
+                      // Reset form
+                      setToolLabel("");
+                      setToolKind("builtin");
+                      setToolRef("");
+                      setToolConfig("{}");
+                    }}
+                    disabled={isAddingTool || !toolLabel || !toolRef}
+                  >
+                    {isAddingTool ? "Adding..." : "Add Tool"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-            {/* Extensions Grid */}
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {agentExtensions.map((extension) => (
-                <Card
-                  key={extension.id}
-                  className="bg-background/40 backdrop-blur-md border-border hover:bg-muted/20 transition-all cursor-pointer group h-full"
-                >
-                  <CardContent className="p-6 h-full">
-                    <div className="flex flex-col gap-4 h-full">
-                      <div className="flex justify-between items-start w-full">
-                        <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary/20 to-chart-4/20 flex items-center justify-center shrink-0">
-                          <PuzzlePieceIcon
-                            className="size-6 text-primary"
-                            weight="fill"
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium text-foreground">
+                Agent Tools
+              </h3>
+              {agent.tools && agent.tools.length > 0 ? (
+                agent.tools.map((tool) => (
+                  <Card
+                    key={tool.id}
+                    className="bg-background/40 backdrop-blur-md border-border"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              tool.enabled ? "bg-green-500" : "bg-red-500"
+                            }`}
                           />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={agent.extensions.includes(extension.id)}
-                            className="scale-75"
-                          />
-                          {agent.extensions.includes(extension.id) && (
-                            <div className="flex items-center gap-1 text-xs text-green-400">
-                              <CheckIcon className="size-3" />
-                              Enabled
+                          <div>
+                            <div className="font-medium text-foreground">
+                              {tool.name}
                             </div>
-                          )}
+                            <div className="text-xs text-muted-foreground font-mono">
+                              {tool.kind} • {tool.ref}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              toggleTool({
+                                agentId: agentId!,
+                                toolId: tool.id,
+                              })
+                            }
+                            disabled={isTogglingTool}
+                          >
+                            {tool.enabled ? "Disable" : "Enable"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() =>
+                              removeTool({
+                                agentId: agentId!,
+                                toolId: tool.id,
+                              })
+                            }
+                            disabled={isRemovingTool}
+                          >
+                            {isRemovingTool ? "Removing..." : "Remove"}
+                          </Button>
                         </div>
                       </div>
-
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                            {extension.name}
-                          </h3>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Product ID: {extension.productId}
-                        </p>
-                        <Badge
-                          variant="secondary"
-                          className="mt-2 bg-muted text-muted-foreground border-0"
-                        >
-                          {extension.category}
-                        </Badge>
-                      </div>
-
-                      <div className="pt-4 mt-auto border-t border-border flex justify-between items-center">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {/* No price needed as requested */}
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <span>{extension.created}</span>
-                        </div>
-                      </div>
-                    </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Card className="bg-background/40 backdrop-blur-md border-border">
+                  <CardContent className="p-6 text-center">
+                    <p className="text-muted-foreground">
+                      No tools added yet. Add your first tool above.
+                    </p>
                   </CardContent>
                 </Card>
-              ))}
+              )}
             </div>
           </TabsContent>
 

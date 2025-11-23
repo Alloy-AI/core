@@ -59,7 +59,7 @@ export default function ConnectButton() {
       {/* Get started / Dashboard buttons */}
       {getButtonState() === "dashboard" ? (
         <Button asChild className="min-w-28">
-          <Link to="/agents">
+          <Link to="/dashboard/agents">
             <AnimatePresence mode="wait">
               <motion.span
                 key={getButtonState()}

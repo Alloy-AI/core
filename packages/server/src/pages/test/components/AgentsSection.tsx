@@ -13,6 +13,13 @@ import {
 } from "@/src/lib/components/ui/select";
 import { Section } from "./Section";
 
+// Supported chains based on evm.ts - for ERC-8004 registry registration
+const SUPPORTED_CHAINS = [
+  { id: 11155111, label: "Ethereum Sepolia", value: "11155111" },
+  { id: 84532, label: "Base Sepolia", value: "84532" },
+  { id: 80002, label: "Polygon Amoy", value: "80002" },
+] as const;
+
 interface AgentsSectionProps {
   onSelectAgent: (agentId: string) => void;
 }
@@ -33,22 +40,20 @@ export function AgentsSection({ onSelectAgent }: AgentsSectionProps) {
   const [newAgentDescription, setNewAgentDescription] = useState("Created via debugger");
   const [newAgentModel, setNewAgentModel] = useState("");
   const [newAgentPrompt, setNewAgentPrompt] = useState("You are a helper.");
-  const [newAgentChains, setNewAgentChains] = useState("11155111");
+  const [newAgentRegistryChain, setNewAgentRegistryChain] = useState("11155111");
 
   const handleCreateAgent = () => {
-    const chainsArray = newAgentChains
-      .split(",")
-      .map((c) => c.trim())
-      .filter((c) => c !== "")
-      .map((c) => Number(c))
-      .filter((n) => !Number.isNaN(n));
+    if (!newAgentRegistryChain) {
+      alert("Please select a registry chain");
+      return;
+    }
 
     createAgent({
       name: newAgentName,
       description: newAgentDescription,
       model: newAgentModel,
       baseSystemPrompt: newAgentPrompt,
-      chains: chainsArray,
+      chains: [Number(newAgentRegistryChain)], // Registry chain for ERC-8004 registration
     });
   };
 
@@ -142,25 +147,61 @@ export function AgentsSection({ onSelectAgent }: AgentsSectionProps) {
           </div>
           <div className="grid gap-2">
             <label
-              htmlFor="newAgentChains"
+              htmlFor="newAgentRegistryChain"
               className="text-xs font-medium text-muted-foreground"
             >
-              Chain IDs (comma-separated) *
+              ERC-8004 Registry Chain *
             </label>
-            <Input
-              id="newAgentChains"
-              value={newAgentChains}
-              onChange={(e) => setNewAgentChains(e.target.value)}
-              className="h-9 text-sm bg-background border-input"
-              placeholder="e.g., 11155111, 1, 137"
-            />
+            <Select
+              value={newAgentRegistryChain}
+              onValueChange={setNewAgentRegistryChain}
+            >
+              <SelectTrigger
+                id="newAgentRegistryChain"
+                className="h-auto min-h-[60px] py-3 text-sm bg-background border-input cursor-pointer"
+              >
+                <SelectValue placeholder="Select registry chain">
+                  {newAgentRegistryChain ? (
+                    <div className="flex flex-col items-start text-left w-full">
+                      <span className="font-medium text-sm">
+                        {SUPPORTED_CHAINS.find((c) => c.value === newAgentRegistryChain)?.label}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        Chain ID: {SUPPORTED_CHAINS.find((c) => c.value === newAgentRegistryChain)?.id}
+                      </span>
+                    </div>
+                  ) : (
+                    "Select registry chain"
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {SUPPORTED_CHAINS.map((chain) => (
+                  <SelectItem
+                    key={chain.id}
+                    value={chain.value}
+                    className="cursor-pointer py-3"
+                  >
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span className="font-medium text-sm">{chain.label}</span>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        Chain ID: {chain.id}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Select the chain for ERC-8004 registry registration. The agent will operate on all supported chains.
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button
             size="sm"
             onClick={handleCreateAgent}
-            disabled={isCreatingAgent || !newAgentName || !newAgentDescription || !newAgentModel || !newAgentPrompt || !newAgentChains}
+            disabled={isCreatingAgent || !newAgentName || !newAgentDescription || !newAgentModel || !newAgentPrompt || !newAgentRegistryChain}
             className="h-9"
           >
             {isCreatingAgent ? "Creating..." : "Create Agent"}

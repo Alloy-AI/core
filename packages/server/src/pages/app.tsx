@@ -8,6 +8,7 @@ import {
 import { withPageErrorBoundary } from "@/src/lib/components/errors/PageErrorBoundary";
 import { useAnalytics } from "../lib/hooks/use-analytics";
 import AgentDetailsPage from "./dashboard/agent/agent-details";
+import ChatWithAgentPage from "./dashboard/agent/chat/ChatWithAgent";
 import AgentsPage from "./dashboard/agents";
 import CreateAgentPage from "./dashboard/create-agent";
 import CreateExtensionPage from "./dashboard/create-extension";
@@ -37,7 +38,7 @@ const dashboardRoute = createRoute({
   path: "/dashboard",
   beforeLoad: () => {
     throw redirect({
-      to: "/agents",
+      to: "/dashboard/agents",
     });
   },
 });
@@ -52,7 +53,7 @@ const createAgentRoute = createRoute({
 
 const agentsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/agents",
+  path: "/dashboard/agents",
   component: function Agents() {
     return withPageErrorBoundary(AgentsPage)({});
   },
@@ -60,7 +61,7 @@ const agentsRoute = createRoute({
 
 const extensionsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/extensions",
+  path: "/dashboard/extensions",
   component: function Extensions() {
     return withPageErrorBoundary(ExtensionsPage)({});
   },
@@ -79,6 +80,14 @@ const agentDetailsRoute = createRoute({
   path: "/dashboard/agent/$agentId",
   component: function AgentDetails() {
     return withPageErrorBoundary(AgentDetailsPage)({});
+  },
+});
+
+const chatWithAgentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dashboard/agent/$agentId/chat",
+  component: function ChatWithAgent() {
+    return withPageErrorBoundary(ChatWithAgentPage)({});
   },
 });
 
@@ -104,6 +113,7 @@ const routeTree = rootRoute.addChildren([
   createAgentRoute,
   agentsRoute,
   agentDetailsRoute,
+  chatWithAgentRoute,
   docsRoute,
   extensionsRoute,
   createExtensionRoute,

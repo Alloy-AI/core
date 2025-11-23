@@ -185,7 +185,7 @@ export default function CreateExtensionPage() {
                     asChild
                     className="border-border hover:bg-muted/50 text-foreground"
                   >
-                    <Link to="/extensions">Cancel</Link>
+                    <Link to="/dashboard/extensions">Cancel</Link>
                   </Button>
                   <Button type="submit" variant="primary">
                     Create Item

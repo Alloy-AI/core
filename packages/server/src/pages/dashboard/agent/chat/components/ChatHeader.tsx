@@ -1,10 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { formatEther } from "viem";
 import Icon from "@/src/lib/components/custom/Icon";
-import { Badge } from "@/src/lib/components/ui/badge";
 import { Button } from "@/src/lib/components/ui/button";
 import ChatHistory from "./ChatHistory";
-import ModelSelector from "./ModelSelector";
 
 interface ChatHeaderProps {
   agent: {
@@ -17,7 +14,6 @@ interface ChatHeaderProps {
   currentConversationId?: string;
   onSelectConversation: (conversationId: string) => void;
   onNewConversation: () => void;
-  balance?: { balance: number };
 }
 
 export default function ChatHeader({
@@ -26,7 +22,6 @@ export default function ChatHeader({
   currentConversationId,
   onSelectConversation,
   onNewConversation,
-  balance,
 }: ChatHeaderProps) {
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -58,7 +53,7 @@ export default function ChatHeader({
     <div className="border-b sticky top-20 z-50 border-border/50 px-4 py-3 flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="items-center gap-3 hidden md:flex">
         <Button variant="ghost" asChild>
-          <Link to="/dashboard/agents/$id" params={{ id: agent.id }}>
+          <Link to="/dashboard/agent/$agentId" params={{ agentId: agent.id }}>
             <Icon name="ArrowLeft" className="size-4" />
           </Link>
         </Button>
@@ -74,16 +69,6 @@ export default function ChatHeader({
           <div>
             <h2 className="font-semibold text-sm">{agent.name}</h2>
           </div>
-
-          {/* Organization Balance */}
-          {balance && (
-            <div className="flex items-center gap-2 px-3 ml-1 py-1.5 bg-accent rounded-md">
-              <Icon name="Wallet" className="size-4 text-muted-foreground" />
-              <span className="text-sm font-medium">
-                {formatEther(BigInt(balance.balance))} USDT
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -94,8 +79,6 @@ export default function ChatHeader({
           onSelectConversation={onSelectConversation}
           onNewConversation={onNewConversation}
         />
-
-        <ModelSelector />
       </div>
     </div>
   );

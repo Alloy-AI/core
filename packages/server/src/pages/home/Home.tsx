@@ -64,7 +64,7 @@ export default function HomePage() {
 
   const handleStartBuilding = () => {
     if (authenticated) {
-      navigate({ to: "/agents" });
+      navigate({ to: "/dashboard/agents" });
     } else {
       login();
     }
