@@ -35,7 +35,7 @@ async function hkdfSha512(
 export async function deriveAesGcmKey(secret: ArrayBuffer, info?: string) {
   const raw = await hkdfSha512(
     secret,
-    info ? new TextEncoder().encode(info).buffer : undefined,
+    info ? new Uint8Array(new TextEncoder().encode(info).buffer) : undefined,
     32,
   );
   return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, [

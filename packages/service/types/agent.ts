@@ -5,7 +5,7 @@ export interface IAgent {
 }
 
 export type AgentDescriptor = {
-  id: string;
+  id: number;
 
   model: string;
   keySeed: string;

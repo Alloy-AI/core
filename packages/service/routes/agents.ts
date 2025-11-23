@@ -15,6 +15,7 @@ import type { AgentDescriptor, EIP155Address } from "../types/agent";
 import { Agent } from "../lib/Agent";
 import db from "../db/client";
 import schema from "../db/schema";
+import { eq } from "drizzle-orm";
 
 const app = new Hono();
 
@@ -41,7 +42,7 @@ app.post("/message", async (ctx) => {
 
   const { message, agentId } = parsedBody.data;
 
-  const agent = await Agent.fromId({ id: agentId });
+  const agent = await Agent.fromId({ id: Number(agentId) });
 
   const response = await agent.generateResponse({ message });
 
@@ -245,19 +246,17 @@ app.post("/", authenticated, async (c) => {
   }
 
   const agentId = await tryCatch(
-    db.createAgent({
-      agentData: {
-        name: opts.name,
-        keySeed: agentSeed,
-        address: agentAddress,
-        description: opts.description,
-        model: opts.model,
-        baseSystemPrompt: opts.baseSystemPrompt,
-        registrationPieceCid: registrationPieceCid.toString(),
-        knowledgeBases: [],
-        tools: [],
-        mcpServers: [],
-      },
+    db.insert(schema.agents).values({
+      name: opts.name,
+      keySeed: agentSeed,
+      address: agentAddress,
+      description: opts.description,
+      model: opts.model,
+      baseSystemPrompt: opts.baseSystemPrompt,
+      registrationPieceCid: registrationPieceCid.toString(),
+      knowledgeBases: [],
+      tools: [],
+      mcpServers: [],
     }),
   );
 
@@ -280,7 +279,10 @@ app.post("/", authenticated, async (c) => {
 //@jriyyya
 app.get("/:address/.well-known/agent-card.json", async (ctx) => {
   const address = ctx.req.param("address");
-  const agent = await db.getAgent({ address: address });
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.address, address));
 
   if (!agent) {
     return ctx.json({ error: "Agent not found" }, { status: 404 });
@@ -289,7 +291,10 @@ app.get("/:address/.well-known/agent-card.json", async (ctx) => {
 
 app.get("/:address/registration.json", async (ctx) => {
   const address = ctx.req.param("address");
-  const agent = await db.getAgent({ address: address });
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.address, address));
 
   if (!agent) {
     return ctx.json({ error: "Agent not found" }, { status: 404 });
@@ -306,7 +311,10 @@ app.get("/:address/registration.json", async (ctx) => {
 
 app.get("/:id", authenticated, async (c) => {
   const id = c.req.param("id");
-  const agent = await db.getAgent({ id });
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.id, Number(id)));
 
   if (!agent) {
     return respond.err(c, "Agent not found", 404);
@@ -333,12 +341,18 @@ app.put("/:id/base-system-prompt", authenticated, async (c) => {
     );
   }
 
-  const agent = await db.getAgent({ id: agentId });
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.id, Number(agentId)));
   if (!agent) {
     return respond.err(c, `Agent with ID ${agentId} not found`, 404);
   }
 
-  await db.updateAgent({ id: agentId, updates: { baseSystemPrompt } });
+  await db
+    .update(schema.agents)
+    .set({ baseSystemPrompt })
+    .where(eq(schema.agents.id, Number(agentId)));
 
   return respond.ok(
     c,

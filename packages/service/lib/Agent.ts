@@ -4,9 +4,12 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import db from "../db/client";
 import { eq } from "drizzle-orm";
 import schema from "../db/schema";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateText } from "ai";
+import type { ToolSet } from "ai";
 
 export class Agent implements IAgent {
-  static async fromId({ id }: { id: string }) {
+  static async fromId({ id }: { id: number }) {
     const [agentData] = await db
       .select()
       .from(schema.agents)
@@ -27,8 +30,8 @@ export class Agent implements IAgent {
       registrationPieceCid: agentData.registrationPieceCid,
       registration: registration,
       baseSystemPrompt: agentData.baseSystemPrompt,
-      knowledgeBases: agentData.knowledgeBases || [],
-      tools: agentData.tools || [],
+      knowledgeBases: agentData.knowledgeBases,
+      tools: agentData.tools,
       mcpServers: (agentData.mcpServers || []) as AgentDescriptor["mcpServers"],
     };
 
@@ -63,7 +66,10 @@ export class Agent implements IAgent {
 
     if (chatId) {
       try {
-        const history = await db.getChatHistory({ chatId });
+        const history = await db
+          .select()
+          .from(schema.chatHistory)
+          .where(eq(schema.chatHistory.chatId, chatId));
         for (const msg of history) {
           if (msg.role === "user" || msg.role === "human") {
             messages.push({ role: "user", content: msg.content });
