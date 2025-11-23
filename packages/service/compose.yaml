@@ -13,5 +13,16 @@ services:
       - PG_URI=${PG_URI}
       - GROQ_API_KEY=${GROQ_API_KEY}
 
+  evm-mcp-server:
+    build: ../evm-mcp-server
+    image: "docker.io/marsian83/evm-mcp-server"
+    platform: linux/amd64
+    ports:
+      - "3001:3001"
+    environment:
+      - MCP_PORT=3001
+      - MCP_HOST=0.0.0.0
+      - NODE_ENV=production
+
 volumes:
   store:
