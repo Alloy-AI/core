@@ -10,6 +10,8 @@ import { env } from "../env";
 import type { Hex } from "viem";
 import { tryCatch } from "./tryCatch";
 import { appd } from "./appd";
+import { getOrCreateDataset } from "./synapse";
+import { jsonParse } from "./json";
 
 export class Agent implements IAgent {
   static async fromId({ id }: { id: number }) {
@@ -53,7 +55,12 @@ export class Agent implements IAgent {
       }),
     );
 
-    const registration: AgentDescriptor["registration"] | null = null;
+    const ds = await getOrCreateDataset();
+    const registrationPieceCid = agentData.registrationPieceCid;
+
+    const registrationBytes = await ds.download(registrationPieceCid);
+    const registration = jsonParse(new TextDecoder().decode(registrationBytes));
+
     if (!registration) {
       throw new Error(`Registration for agent ${agentData.id} not found`);
     }
