@@ -9,7 +9,9 @@ services:
       - store:/root/.store # Persistent  storage.
       - /run/rofl-appd.sock:/run/rofl-appd.sock # appd
     environment:
-      - MY_SECRET_1=${MY_SECRET_1}
+      - NODE_ENV=${NODE_ENV}
+      - PG_URI=${PG_URI}
+      - GROQ_API_KEY=${GROQ_API_KEY}
 
 volumes:
   store:
