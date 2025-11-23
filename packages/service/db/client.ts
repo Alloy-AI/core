@@ -193,10 +193,10 @@ async function createAgent(args: { agentData: AgentData }) {
   return result[0];
 }
 
-async function getAgent(args: { id: string }) {
-  const { id } = args;
+async function getAgent(args: { id?: string, address?: string }) {
+  const { id, address } = args;
   const result = await sql`
-        SELECT * FROM agents WHERE id = ${id}
+        SELECT * FROM agents WHERE id = ${id ?? "_"} OR address = ${address ?? "_"}
     `;
   if (result.length === 0) return null;
   const row = result[0] as AgentRowType;
