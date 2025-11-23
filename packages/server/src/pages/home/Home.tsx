@@ -56,7 +56,7 @@ const itemVariants: Variants = {
 };
 
 export default function HomePage() {
-  const text1 = "Build Intelligent";
+  const text1 = "Build Private";
   const text2 = "On-Chain Agents";
 
   const { login, authenticated } = usePrivy();
@@ -139,8 +139,7 @@ export default function HomePage() {
           className="text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto mb-8 leading-relaxed drop-shadow-md"
           variants={itemVariants}
         >
-          Alloy empowers developers to create, deploy, and orchestrate
-          autonomous AI agents that live on the blockchain.
+          Create, deploy, and orchestrate private autonomous AI agents that live on the blockchain.
         </motion.p>
 
         <motion.div
