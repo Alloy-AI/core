@@ -7,7 +7,8 @@ export const env = z.object({
     GROQ_API_KEY: z.string(),
     PG_URI: z.string(),
     PORT: z.number().min(1).default(3000),
-    EVM_PRIVATE_KEY_SYNAPSE: z.string(),
+    EVM_PRIVATE_KEY_SYNAPSE: z.string().startsWith("0x").transform((key) => key as `0x${string}`),
+    GEMINI_API_KEY: z.string(),
 }).parse(envRaw)
 
 export const isProd = env.NODE_ENV === "production";
