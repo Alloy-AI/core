@@ -4,7 +4,7 @@ const server = "0x361cC24489DA702BFc57c49357AE5151F65CB464";
 
 async function main() {
   const api = axios.create({
-    baseURL: "https://p3000.m1137.opf-testnet-rofl-25.rofl.app",
+    baseURL: "http://localhost:3000",
     headers: {
       Authorization: "Bearer 0x470AEf46CEB329075D92a9874977BBF44Fc9D28c",
       "Content-Type": "application/json",

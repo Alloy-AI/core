@@ -209,7 +209,7 @@ app.post("/", authenticated, async (c) => {
 
     logs.forEach(async (log) => {
       if (log.args.agentId) {
-        await registry.write.safeTransferFrom([
+        registry.write.safeTransferFrom([
           evmClient.account.address,
           c.get("userWallet"),
           log.args.agentId,
@@ -238,31 +238,34 @@ app.post("/", authenticated, async (c) => {
 
   ds.upload(registrationBytes);
 
-  const agentId = await tryCatch(
-    db.insert(schema.agents).values({
-      name: opts.name,
-      keySeed: agentSeed,
-      address: agentAddress,
-      description: opts.description,
-      model: opts.model,
-      baseSystemPrompt: opts.baseSystemPrompt,
-      registrationPieceCid: registrationPieceCid.toString(),
-      knowledgeBases: [],
-      tools: [],
-    }),
+  const newAgent = await tryCatch(
+    db
+      .insert(schema.agents)
+      .values({
+        name: opts.name,
+        keySeed: agentSeed,
+        address: agentAddress,
+        description: opts.description,
+        model: opts.model,
+        baseSystemPrompt: opts.baseSystemPrompt,
+        registrationPieceCid: registrationPieceCid.toString(),
+        knowledgeBases: [],
+        tools: [],
+      })
+      .returning({ agentId: schema.agents.id }),
   );
 
-  if (agentId.error) {
+  if (newAgent.error) {
     return respond.err(
       c,
-      `Failed to create agent in db ${agentId.error.message}`,
+      `Failed to create agent in db ${newAgent.error.message}`,
       500,
     );
   }
 
   return respond.ok(
     c,
-    { agentId: agentId.data },
+    { agentId: newAgent.data[0] },
     "Agent created successfully",
     201,
   );
