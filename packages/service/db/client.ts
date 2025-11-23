@@ -262,6 +262,7 @@ async function getAllAgents(args: {}) {
 }
 
 export const db = {
+    $client: sql,
   insertMessage,
   getChatHistory,
   getChatsByWallet,
