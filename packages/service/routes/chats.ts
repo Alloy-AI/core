@@ -101,7 +101,12 @@ app.put("/:id", authenticated, async (ctx) => {
     .from(schema.chats)
     .where(eq(schema.chats.id, chatId));
 
-  return respond.ok(ctx, { chat: updatedChat }, "Chat updated successfully", 200);
+  return respond.ok(
+    ctx,
+    { chat: updatedChat },
+    "Chat updated successfully",
+    200,
+  );
 });
 
 // Get message history for a specific conversation
@@ -193,6 +198,7 @@ app.post("/:id/messages", authenticated, async (ctx) => {
     );
   } catch (error) {
     console.error("Error generating AI response:", error);
+    console.error(JSON.stringify(error, null, 2));
     return respond.err(ctx, "Failed to generate response", 500);
   }
 });

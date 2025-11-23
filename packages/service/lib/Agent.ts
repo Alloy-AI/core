@@ -5,7 +5,7 @@ import db from "../db/client";
 import { eq, and } from "drizzle-orm";
 import schema from "../db/schema";
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { generateText, ModelMessage } from "ai";
 import { env } from "../env";
 import type { Hex } from "viem";
 import { tryCatch } from "./tryCatch";
@@ -101,15 +101,17 @@ export class Agent implements IAgent {
   }): Promise<string> {
     const { message, chatId } = args;
 
-    const messages: Array<{
-      role: "system" | "user" | "assistant";
-      content: string;
-    }> = [];
+    const messages: Array<ModelMessage> = [];
 
     if (this.agentDescriptor.baseSystemPrompt) {
       messages.push({
-        role: "system",
-        content: this.agentDescriptor.baseSystemPrompt,
+        role: "assistant",
+        content: [
+          {
+            type: "text",
+            text: this.agentDescriptor.baseSystemPrompt,
+          },
+        ],
       });
     }
 
@@ -133,7 +135,15 @@ export class Agent implements IAgent {
       }
     }
 
-    messages.push({ role: "user", content: message });
+    messages.push({
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: message,
+        },
+      ],
+    });
 
     const evmMcpClient = await experimental_createMCPClient({
       transport: new StreamableHTTPClientTransport(
