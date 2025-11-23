@@ -4,9 +4,7 @@
   "type": "module",
   "private": true,
   "workspaces": [
-    "packages/contracts",
-    "packages/server",
-    "packages/service"
+    "packages/*"
   ],
   "scripts": {
     "client:dev": "bun run --cwd packages/server dev",
