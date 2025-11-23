@@ -2,7 +2,7 @@ import { experimental_createMCPClient } from "@ai-sdk/mcp";
 import type { AgentDescriptor, IAgent } from "../types/agent";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import db from "../db/client";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import schema from "../db/schema";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
@@ -22,6 +22,37 @@ export class Agent implements IAgent {
       throw new Error(`Agent with ID ${id} not found`);
     }
 
+    // Fetch MCP servers from selectedMcp table
+    const selectedMcps = await db
+      .select({
+        mcpServer: schema.mcpServers,
+        selectedMcp: schema.selectedMcp,
+      })
+      .from(schema.selectedMcp)
+      .innerJoin(
+        schema.mcpServers,
+        eq(schema.selectedMcp.mcpId, schema.mcpServers.id),
+      )
+      .where(
+        and(
+          eq(schema.selectedMcp.agentId, Number(id)),
+          eq(schema.selectedMcp.isActive, true),
+        ),
+      );
+
+    // Transform to AgentDescriptor format
+    const mcpServers: AgentDescriptor["mcpServers"] = selectedMcps.map(
+      ({ mcpServer, selectedMcp }) => ({
+        id: mcpServer.id.toString(),
+        name: mcpServer.name,
+        url: mcpServer.url,
+        authHeaders: selectedMcp.authToken
+          ? { Authorization: `Bearer ${selectedMcp.authToken}` }
+          : undefined,
+        enabled: selectedMcp.isActive ?? true,
+      }),
+    );
+
     const registration: AgentDescriptor["registration"] | null = null;
     if (!registration) {
       throw new Error(`Registration for agent ${agentData.id} not found`);
@@ -33,9 +64,10 @@ export class Agent implements IAgent {
       registrationPieceCid: agentData.registrationPieceCid,
       registration: registration,
       baseSystemPrompt: agentData.baseSystemPrompt,
-      knowledgeBases: agentData.knowledgeBases,
-      tools: agentData.tools,
-      mcpServers: (agentData.mcpServers || []) as AgentDescriptor["mcpServers"],
+      knowledgeBases: (agentData.knowledgeBases ||
+        []) as AgentDescriptor["knowledgeBases"],
+      tools: (agentData.tools || []) as AgentDescriptor["tools"],
+      mcpServers,
     };
 
     const agentPvtKeyResult = await tryCatch(

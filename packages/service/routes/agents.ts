@@ -256,7 +256,6 @@ app.post("/", authenticated, async (c) => {
       registrationPieceCid: registrationPieceCid.toString(),
       knowledgeBases: [],
       tools: [],
-      mcpServers: [],
     }),
   );
 

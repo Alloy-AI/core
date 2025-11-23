@@ -26,7 +26,6 @@ export const agents = pgTable(
     baseSystemPrompt: text("base_system_prompt").notNull(),
     knowledgeBases: jsonb("knowledge_bases").$defaultFn(() => []),
     tools: jsonb("tools").$defaultFn(() => []),
-    mcpServers: jsonb("mcp_servers").$defaultFn(() => []),
   },
   (table) => ({
     idIdx: index("idx_agents_id").on(table.id),
