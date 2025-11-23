@@ -21,6 +21,7 @@ export default function ChatWithAgent() {
   });
 
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
 
   // Get agent data
   const {
@@ -61,7 +62,8 @@ export default function ChatWithAgent() {
   const handleSendMessage = async (content: string) => {
     if (!content.trim() || !agentId) return;
 
-    let chatId = currentChatId;
+    setPendingMessage(content.trim());
+    const chatId = currentChatId;
 
     // If no chat exists, create one
     if (!chatId) {
@@ -69,24 +71,37 @@ export default function ChatWithAgent() {
         { agentId: Number(agentId) },
         {
           onSuccess: (response) => {
-            const newChatId = response.data.chatId;
+            const newChatId = response.chatId;
             setCurrentChatId(newChatId);
             // Send message after chat is created
-            sendMessage({
-              chatId: newChatId,
-              content: content.trim(),
-            });
+            sendMessage(
+              {
+                chatId: newChatId,
+                content: content.trim(),
+              },
+              {
+                onSuccess: () => setPendingMessage(null),
+                onError: () => setPendingMessage(null),
+              },
+            );
           },
+          onError: () => setPendingMessage(null),
         },
       );
       return;
     }
 
     // Send the message
-    sendMessage({
-      chatId,
-      content: content.trim(),
-    });
+    sendMessage(
+      {
+        chatId,
+        content: content.trim(),
+      },
+      {
+        onSuccess: () => setPendingMessage(null),
+        onError: () => setPendingMessage(null),
+      },
+    );
   };
 
   const selectChat = (chatId: string) => {
@@ -98,7 +113,7 @@ export default function ChatWithAgent() {
       { agentId: Number(agentId) },
       {
         onSuccess: (response) => {
-          setCurrentChatId(response.data.chatId);
+          setCurrentChatId(response.chatId);
         },
       },
     );
@@ -127,7 +142,6 @@ export default function ChatWithAgent() {
       messages: [],
     })) || [];
 
-  const isLoading = isLoadingAgent || isLoadingChats || isLoadingMessages;
   const isSending = isSendingMessage || isCreatingChat;
 
   // Loading state
@@ -174,7 +188,7 @@ export default function ChatWithAgent() {
 
   return (
     <Layout>
-      <div className="min-h-full bg-background flex flex-col w-full">
+      <div className="h-[calc(100dvh-var(--navbar-height)-3rem)] bg-background flex flex-col w-full overflow-hidden">
         {/* Chat Header */}
         <ChatHeader
           agent={{
@@ -190,12 +204,13 @@ export default function ChatWithAgent() {
         />
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4">
+        <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 overflow-hidden">
           <ChatArea
             messages={transformedMessages}
             isLoading={isSending}
             agentName={agent.name}
             onPromptClick={handlePromptClick}
+            pendingMessage={pendingMessage}
           />
 
           {/* Warning when no chat is selected */}

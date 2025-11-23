@@ -13,6 +13,7 @@ interface ChatAreaProps {
   isLoading: boolean;
   agentName: string;
   onPromptClick: (prompt: string) => void;
+  pendingMessage?: string | null;
 }
 
 export default function ChatArea({
@@ -20,6 +21,7 @@ export default function ChatArea({
   isLoading,
   agentName,
   onPromptClick,
+  pendingMessage,
 }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -29,18 +31,30 @@ export default function ChatArea({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading]);
+  }, [messages, isLoading, pendingMessage]);
 
   return (
     <div className="flex-1 py-4 sm:py-6 space-y-4 overflow-y-auto">
-      {messages.length === 0 ? (
+      {messages.length === 0 && !pendingMessage ? (
         <div className="h-full">
           <ChatWelcome agentName={agentName} onPromptClick={onPromptClick} />
         </div>
       ) : (
-        messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
-        ))
+        <>
+          {messages.map((message) => (
+            <ChatMessage key={message.id} message={message} />
+          ))}
+          {pendingMessage && (
+            <ChatMessage
+              message={{
+                id: "pending-message",
+                content: pendingMessage,
+                isUser: true,
+                timestamp: new Date(),
+              }}
+            />
+          )}
+        </>
       )}
 
       {isLoading && <ChatLoading />}

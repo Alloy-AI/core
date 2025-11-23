@@ -13,6 +13,7 @@ export interface Agent {
   baseSystemPrompt: string;
   tools?: Tool[];
   registrationPieceCid?: string;
+  imageUrl?: string;
 }
 
 export interface Tool {

@@ -50,7 +50,7 @@ export default function ChatHeader({
   };
 
   return (
-    <div className="border-b sticky top-20 z-50 border-border/50 px-4 py-3 flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="border-b border-border/50 px-4 py-3 flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="items-center gap-3 hidden md:flex">
         <Button variant="ghost" asChild>
           <Link to="/dashboard/agent/$agentId" params={{ agentId: agent.id }}>
@@ -73,6 +73,15 @@ export default function ChatHeader({
       </div>
 
       <div className="flex w-full md:w-auto justify-between md:justify-start items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onNewConversation}
+          className="hidden md:flex items-center gap-2"
+        >
+          <Icon name="Plus" className="size-4" />
+          New Chat
+        </Button>
         <ChatHistory
           conversations={conversations}
           currentConversationId={currentConversationId}

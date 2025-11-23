@@ -73,7 +73,7 @@ export default function ConnectButton() {
                 }}
                 layout
               >
-                {getButtonState() === "dashboard" ? "Agents" : "Get started"}
+                {getButtonState() === "dashboard" ? "Dashboard" : "Get started"}
               </motion.span>
             </AnimatePresence>
           </Link>

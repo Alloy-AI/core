@@ -188,14 +188,14 @@ export default function AgentDetailsPage() {
                 className="flex items-center gap-2 px-4 py-2"
               >
                 <PlugsConnectedIcon className="size-4" />
-                Integrations (NOT IMPLEMENTED)
+                Integrations
               </TabsTrigger>
               <TabsTrigger
                 value="api"
                 className="flex items-center gap-2 px-4 py-2"
               >
                 <CodeIcon className="size-4" />
-                API Specs (NOT IMPLEMENTED)
+                API Specs
               </TabsTrigger>
             </TabsList>
           </div>
@@ -215,7 +215,7 @@ export default function AgentDetailsPage() {
                   disabled
                 >
                   <TrashIcon className="mr-2 size-4" />
-                  Delete Agent (NOT IMPLEMENTED)
+                  Delete Agent
                 </Button>
               </CardHeader>
               <CardContent className="space-y-8">
@@ -289,7 +289,7 @@ export default function AgentDetailsPage() {
                   <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
                     <div className="space-y-0.5">
                       <Label className="text-base text-foreground">
-                        Search Enabled (NOT IMPLEMENTED)
+                        Search Enabled
                       </Label>
                       <p className="text-xs text-muted-foreground">
                         Web search capabilities
@@ -310,7 +310,7 @@ export default function AgentDetailsPage() {
                   <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
                     <div className="space-y-0.5">
                       <Label className="text-base text-foreground">
-                        Memory Enabled (NOT IMPLEMENTED)
+                        Memory Enabled
                       </Label>
                       <p className="text-xs text-muted-foreground">
                         Conversation memory

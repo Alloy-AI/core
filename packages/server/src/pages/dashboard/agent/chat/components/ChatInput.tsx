@@ -32,7 +32,7 @@ export default function ChatInput({
   };
 
   return (
-    <div className="border rounded-xl py-4 sticky bottom-4 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="border-t border-border/50 pt-4 pb-2 bg-background">
       <div className="flex gap-2 sm:gap-3 px-6">
         <Textarea
           value={inputValue}

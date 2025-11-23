@@ -1,8 +1,9 @@
 import { CpuIcon, PlusIcon, RobotIcon } from "@phosphor-icons/react";
-import { Link } from "@tanstack/react-router";
 import { Button } from "@/src/lib/components/ui/button";
 import { Card, CardContent } from "@/src/lib/components/ui/card";
+import { Link } from "@tanstack/react-router";
 import { Skeleton } from "@/src/lib/components/ui/skeleton";
+import { Image } from "@/src/lib/components/custom/Image";
 import { useAgents } from "@/src/lib/hooks/use-api";
 import Layout from "./layout";
 
@@ -66,11 +67,17 @@ export default function AgentsPage() {
                   <CardContent className="p-6 h-full">
                     <div className="flex flex-col gap-4 h-full">
                       <div className="flex justify-between items-start w-full">
-                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-chart-4/20 flex items-center justify-center shrink-0">
-                          <RobotIcon
-                            className="size-6 text-primary"
-                            weight="fill"
-                          />
+                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-chart-4/20 flex items-center justify-center shrink-0 overflow-hidden">
+                          <Image
+                            src={agent.imageUrl}
+                            alt={agent.name}
+                            className="h-full w-full object-cover"
+                          >
+                            <RobotIcon
+                              className="size-6 text-primary"
+                              weight="fill"
+                            />
+                          </Image>
                         </div>
                         <div className="px-2 py-1 rounded-full text-xs font-medium border bg-muted/10 text-muted-foreground border-border">
                           {agent.model || "No Model"}
