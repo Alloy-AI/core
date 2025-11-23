@@ -13,13 +13,12 @@ import { tryCatch } from "../lib/tryCatch";
 import { authenticated } from "../middleware/auth";
 import type { AgentDescriptor, EIP155Address } from "../types/agent";
 import { Agent } from "../lib/Agent";
-import db from "../db/client";
-import schema from "../db/schema";
+import { getAllAgents, getAgent, createAgent, updateAgent } from "../db/client";
 
 const app = new Hono();
 
 app.get("/", authenticated, async (c) => {
-  const agents = await db.select().from(schema.agents);
+  const agents = await getAllAgents();
   return respond.ok(c, { agents }, "Agents retrieved successfully", 200);
 });
 
@@ -245,7 +244,7 @@ app.post("/", authenticated, async (c) => {
   }
 
   const agentId = await tryCatch(
-    db.createAgent({
+    createAgent({
       agentData: {
         name: opts.name,
         keySeed: agentSeed,
