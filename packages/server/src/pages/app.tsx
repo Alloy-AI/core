@@ -14,6 +14,7 @@ import CreateExtensionPage from "./dashboard/create-extension";
 import ExtensionsPage from "./dashboard/extensions";
 import DocsPage from "./docs";
 import HomePage from "./home";
+import TestPage from "./test";
 
 const rootRoute = createRootRoute({
   component: () => {
@@ -87,6 +88,14 @@ const docsRoute = createRoute({
   },
 });
 
+const testRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/test",
+  component: function Test() {
+    return withPageErrorBoundary(TestPage)({});
+  },
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardRoute,
@@ -96,6 +105,7 @@ const routeTree = rootRoute.addChildren([
   docsRoute,
   extensionsRoute,
   createExtensionRoute,
+  testRoute,
 ]);
 const router = createRouter({
   routeTree,

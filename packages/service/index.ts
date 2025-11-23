@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { db } from "./db/client";
+import { logger } from "hono/logger";
+import { cors } from "hono/cors";
 import { env } from "./env";
 import { appd } from "./lib/appd";
 import { respond } from "./lib/Router";
@@ -10,6 +11,9 @@ import chats from "./routes/chats";
 import tools from "./routes/tools";
 
 const app = new Hono();
+
+app.use(logger());
+app.use(cors());
 
 app.get("/app-id", (c) => {
   return respond.ok(c, { appId: appd.getAppId() }, "", 200);
