@@ -1,14 +1,11 @@
 import { experimental_createMCPClient } from "@ai-sdk/mcp";
 import type { AgentDescriptor, IAgent } from "../types/agent";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { getChatHistory } from "../db/client";
+import { getAgent, getChatHistory } from "../db/client";
 
 export class Agent implements IAgent {
   static async fromId({ id }: { id: string }) {
-    const [agentData] = await db
-      .select()
-      .from(schema.agents)
-      .where(eq(schema.agents.id, Number(id)));
+    const agentData = await getAgent({ id });
 
     if (!agentData) {
       throw new Error(`Agent with ID ${id} not found`);
@@ -65,7 +62,7 @@ export class Agent implements IAgent {
 
     if (chatId) {
       try {
-        const history = await db.getChatHistory({ chatId });
+        const history = await getChatHistory({ chatId });
         for (const msg of history) {
           if (msg.role === "user" || msg.role === "human") {
             messages.push({ role: "user", content: msg.content });
