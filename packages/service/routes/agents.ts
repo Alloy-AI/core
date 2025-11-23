@@ -252,7 +252,10 @@ app.post("/", authenticated, async (c) => {
         knowledgeBases: [],
         tools: [],
       })
-      .returning({ agentId: schema.agents.id }),
+      .returning({
+        id: schema.agents.id,
+        address: schema.agents.address,
+      }),
   );
 
   if (newAgent.error) {
@@ -265,7 +268,7 @@ app.post("/", authenticated, async (c) => {
 
   return respond.ok(
     c,
-    { agentId: newAgent.data[0] },
+    { ...newAgent.data[0], registration: registrationEndpoint },
     "Agent created successfully",
     201,
   );
