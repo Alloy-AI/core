@@ -1,22 +1,13 @@
-import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { z } from "zod";
 import { respond } from "@/api/lib/utils/respond";
 
-const example = new Hono().get(
-  "/",
-  zValidator(
-    "query",
-    z.object({
-      name: z.string(),
-    }),
-  ),
-  async (ctx) => {
-    const { name } = ctx.req.valid("query");
+const example = new Hono().get("/", async (ctx) => {
+  const query = ctx.req.query();
+  const name = query.name;
 
-    if (!name) {
-      return respond.err(ctx, "Name is required", 400);
-    }
+  if (!name) {
+    return respond.err(ctx, "Name is required", 400);
+  }
 
     return respond.ok(
       ctx,

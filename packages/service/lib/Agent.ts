@@ -1,6 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { z } from "zod";
 import { db } from "../db/client";
 import type { AgentDescriptor, IAgent } from "../types/agent";
 import { MCPClient } from "./mcpClient";
@@ -95,7 +94,7 @@ export class Agent implements IAgent {
       const mcpToolName = mcpTool.name;
       tools[mcpToolName] = {
         description: mcpTool.description,
-        parameters: z.object(mcpTool.inputSchema.properties || {}),
+        parameters: mcpTool.inputSchema.properties || {},
         execute: async (args: any) => {
           return await this.mcpClient.callTool(mcpToolName, args);
         },
@@ -108,7 +107,7 @@ export class Agent implements IAgent {
     })
 
     const { text } = await generateText({
-      model: llm("llama-3.3-70b-versatile"),
+      model: llm(this.agentDescriptor.model),
       messages: messages,
       temperature: 0.7,
       tools: Object.keys(tools).length > 0 ? tools : undefined,

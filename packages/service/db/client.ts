@@ -1,34 +1,20 @@
 import { SQL } from "bun";
-import { z } from "zod";
 import { decryptSelf, encryptSelf } from "../lib/crypto";
-import {
-  ChatHistoryRowSchema,
-  ChatSchema,
-  CreateAgentSchema,
-  CreateChatSchema,
-  DBAgentSchema,
-  DeleteAgentSchema,
-  DeleteChatHistorySchema,
-  DeleteChatSchema,
-  DeleteChatsByWalletSchema,
-  GetAgentSchema,
-  GetAllAgentsSchema,
-  GetAllChatIdsSchema,
-  GetChatHistorySchema,
-  GetChatSchema,
-  GetChatsByWalletSchema,
-  InsertMessageSchema,
-  RawAgentRowSchema,
-  RawChatHistoryRowSchema,
-  RawChatRowSchema,
-  UpdateAgentSchema,
-} from "../lib/zod";
 import type { AgentDescriptor } from "../types/agent";
 import { env } from "../env";
 
 const sql = new SQL(env.PG_URI);
 
-type AgentData = Omit<AgentDescriptor, "registration" | "id">;
+type AgentData = {
+  name: string;
+  description: string;
+  model: string;
+  registrationPieceCid: string;
+  baseSystemPrompt: string;
+  knowledgeBases: any[];
+  tools: any[];
+  mcpServers: any[];
+};
 
 // Raw database row types
 interface ChatHistoryRow {
@@ -51,13 +37,39 @@ interface AgentRow {
   mcp_servers: string;
 }
 
+type ChatRowType = {
+  id: string;
+  wallet_address: string;
+  agent_id: number | null;
+  created_at: string;
+};
+
+type AgentRowType = {
+  id: number;
+  model: string;
+  registration_piece_cid: string;
+  base_system_prompt: string;
+  knowledge_bases: string;
+  tools: string;
+  mcp_servers: string;
+};
+
+type DBAgentType = {
+  id: string;
+  model: string;
+  registrationPieceCid: string;
+  baseSystemPrompt: string;
+  knowledgeBases: any[];
+  tools: any[];
+  mcpServers: any[];
+};
+
 async function insertMessage(args: {
   chatId: string;
   role: string;
   content: string;
 }) {
-  const validatedArgs = InsertMessageSchema.parse(args);
-  const { chatId, role, content } = validatedArgs;
+  const { chatId, role, content } = args;
 
   const encryptedContent = await encryptSelf({ message: content });
 
@@ -70,8 +82,7 @@ async function insertMessage(args: {
 }
 
 async function getChatHistory(args: { chatId: string }) {
-  const validatedArgs = GetChatHistorySchema.parse(args);
-  const { chatId } = validatedArgs;
+  const { chatId } = args;
   const results = await sql`
         SELECT ch.*, c.wallet_address
         FROM chat_history ch
@@ -80,54 +91,48 @@ async function getChatHistory(args: { chatId: string }) {
         ORDER BY ch.timestamp ASC
     `;
 
-  return results.map((row: unknown) => {
-    const rawRow = RawChatHistoryRowSchema.merge(
-      z.object({ wallet_address: z.string() }),
-    ).parse(row);
+  return Promise.all(results.map(async (row: unknown) => {
+    const rawRow = row as ChatHistoryRow;
     const decryptedRow = {
       ...rawRow,
-      content: decryptSelf({ ciphertext: rawRow.content }),
+      content: await decryptSelf({ ciphertext: rawRow.content }),
     };
-    return ChatHistoryRowSchema.parse(decryptedRow);
-  });
+    return decryptedRow as ChatHistoryRow;
+  }));
 }
 
 async function getChatsByWallet(args: { walletAddress: string }) {
-  const validatedArgs = GetChatsByWalletSchema.parse(args);
-  const { walletAddress } = validatedArgs;
+  const { walletAddress } = args;
   const results = await sql`
         SELECT * FROM chats
         WHERE wallet_address = ${walletAddress}
     `;
 
   return results.map((row: unknown) => {
-    const parsedRow = RawChatRowSchema.parse(row);
-    return ChatSchema.parse({
+    const parsedRow = row as ChatRowType;
+    return {
       id: parsedRow.id,
       walletAddress: parsedRow.wallet_address,
       agentId: parsedRow.agent_id,
       createdAt: parsedRow.created_at,
-    });
+    } as { id: string; walletAddress: string; agentId: number | null; createdAt: string; };
   });
 }
 
 async function deleteChatHistory(args: { chatId: string }) {
-  const validatedArgs = DeleteChatHistorySchema.parse(args);
-  const { chatId } = validatedArgs;
+  const { chatId } = args;
   await sql`DELETE FROM chat_history WHERE chat_id = ${chatId}`;
 }
 
 async function deleteChatsByWallet(args: { walletAddress: string }) {
-  const validatedArgs = DeleteChatsByWalletSchema.parse(args);
-  const { walletAddress } = validatedArgs;
+  const { walletAddress } = args;
   await sql`DELETE FROM chats WHERE wallet_address = ${walletAddress}`;
 }
 
 async function getAllChatIds(args: {}) {
-  const validatedArgs = GetAllChatIdsSchema.parse(args);
   const results = await sql`SELECT id FROM chats`;
   return results.map((row: unknown) => {
-    const parsed = z.object({ id: z.string() }).parse(row);
+    const parsed = row as { id: string };
     return parsed.id;
   });
 }
@@ -137,8 +142,7 @@ async function createChat(args: {
   walletAddress: string;
   agentId?: number;
 }) {
-  const validatedArgs = CreateChatSchema.parse(args);
-  const { chatId, walletAddress, agentId } = validatedArgs;
+  const { chatId, walletAddress, agentId } = args;
   await sql`
         INSERT INTO chats (id, wallet_address, agent_id)
         VALUES (${chatId}, ${walletAddress}, ${agentId ?? null})
@@ -146,30 +150,27 @@ async function createChat(args: {
 }
 
 async function getChat(args: { chatId: string }) {
-  const validatedArgs = GetChatSchema.parse(args);
-  const { chatId } = validatedArgs;
+  const { chatId } = args;
   const result = await sql`
         SELECT * FROM chats WHERE id = ${chatId}
     `;
   if (result.length === 0) return null;
-  const row = RawChatRowSchema.parse(result[0]);
-  return ChatSchema.parse({
+  const row = result[0] as ChatRowType;
+  return {
     id: row.id,
     walletAddress: row.wallet_address,
     agentId: row.agent_id,
     createdAt: row.created_at,
-  });
+  } as { id: string; walletAddress: string; agentId: number | null; createdAt: string; };
 }
 
 async function deleteChat(args: { chatId: string }) {
-  const validatedArgs = DeleteChatSchema.parse(args);
-  const { chatId } = validatedArgs;
+  const { chatId } = args;
   await sql`DELETE FROM chats WHERE id = ${chatId}`;
 }
 
 async function createAgent(args: { agentData: AgentData }) {
-  const validatedArgs = CreateAgentSchema.parse(args);
-  const { agentData } = validatedArgs;
+  const { agentData } = args;
   const result = await sql`
         INSERT INTO agents (name, description, registration_piece_cid, base_system_prompt, knowledge_bases, tools, mcp_servers)
         VALUES (${agentData.name}, ${agentData.description}, ${agentData.registrationPieceCid}, ${agentData.baseSystemPrompt}, ${JSON.stringify(agentData.knowledgeBases)}, ${JSON.stringify(agentData.tools)}, ${JSON.stringify(agentData.mcpServers)})
@@ -179,13 +180,12 @@ async function createAgent(args: { agentData: AgentData }) {
 }
 
 async function getAgent(args: { id: string }) {
-  const validatedArgs = GetAgentSchema.parse(args);
-  const { id } = validatedArgs;
+  const { id } = args;
   const result = await sql`
         SELECT * FROM agents WHERE id = ${id}
     `;
   if (result.length === 0) return null;
-  const row = RawAgentRowSchema.parse(result[0]);
+  const row = result[0] as AgentRowType;
   const agent = {
     id: String(row.id),
     model: row.model,
@@ -195,12 +195,11 @@ async function getAgent(args: { id: string }) {
     tools: JSON.parse(row.tools),
     mcpServers: JSON.parse(row.mcp_servers),
   };
-  return DBAgentSchema.parse(agent);
+  return agent as DBAgentType;
 }
 
 async function updateAgent(args: { id: string; updates: Partial<AgentData> }) {
-  const validatedArgs = UpdateAgentSchema.parse(args);
-  const { id, updates } = validatedArgs;
+  const { id, updates } = args;
   const fields = [];
   const values = [];
   if (updates.name !== undefined) {
@@ -238,16 +237,14 @@ async function updateAgent(args: { id: string; updates: Partial<AgentData> }) {
 }
 
 async function deleteAgent(args: { id: string }) {
-  const validatedArgs = DeleteAgentSchema.parse(args);
-  const { id } = validatedArgs;
+  const { id } = args;
   await sql`DELETE FROM agents WHERE id = ${id}`;
 }
 
 async function getAllAgents(args: {}) {
-  const validatedArgs = GetAllAgentsSchema.parse(args);
   const results = await sql`SELECT * FROM agents`;
   return results.map((row: unknown) => {
-    const parsedRow = RawAgentRowSchema.parse(row);
+    const parsedRow = row as AgentRowType;
     const agent = {
       id: String(parsedRow.id),
       model: parsedRow.model,
@@ -257,7 +254,7 @@ async function getAllAgents(args: {}) {
       tools: JSON.parse(parsedRow.tools),
       mcpServers: JSON.parse(parsedRow.mcp_servers),
     };
-    return DBAgentSchema.parse(agent);
+    return agent as DBAgentType;
   });
 }
 

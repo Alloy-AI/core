@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { db } from "../db/client";
 import { respond } from "../lib/Router";
 import { authenticated } from "../middleware/auth";
-import { InsertMessageSchema } from "../lib/zod";
 import { Agent } from "../lib/Agent";
 
 const app = new Hono();
@@ -54,16 +53,11 @@ app.post("/:id/messages", authenticated, async (ctx) => {
   const chatId = ctx.req.param("id");
   const body = await ctx.req.json();
 
-  // Validate input
-  const result = InsertMessageSchema.safeParse({
+  const messageData = {
     chatId,
     role: body.role || "user",
     content: body.content
-  });
-
-  if (!result.success) {
-    return respond.err(ctx, "Invalid request body", 400);
-  }
+  };
 
   // Verify ownership
   const chat = await db.getChat({ chatId });
@@ -85,13 +79,13 @@ app.post("/:id/messages", authenticated, async (ctx) => {
   }
 
   // Insert user message
-  await db.insertMessage(result.data);
+  await db.insertMessage(messageData);
 
   try {
     // Generate AI response using Agent class
     const agent = await Agent.fromId({ id: agentData.id });
     const aiResponse = await agent.generateResponse({
-      message: result.data.content,
+      message: messageData.content,
       chatId: chatId
     });
 
