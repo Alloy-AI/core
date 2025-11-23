@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS chat_history;
+
+DROP TABLE IF EXISTS chats;
+
+DROP TABLE IF EXISTS agents;

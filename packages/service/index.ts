@@ -23,3 +23,4 @@ Bun.serve({
   fetch: app.fetch,
   port: env.PORT,
 })
+console.log("\n\nRUNNING SERVICE ON PORT", env.PORT);

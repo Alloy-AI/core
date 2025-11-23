@@ -30,6 +30,7 @@ interface AgentRow {
   id: number;
   name: string;
   description: string;
+  model: string;
   registration_piece_cid: string;
   base_system_prompt: string;
   knowledge_bases: string;
@@ -46,6 +47,8 @@ type ChatRowType = {
 
 type AgentRowType = {
   id: number;
+  name: string;
+  description: string;
   model: string;
   registration_piece_cid: string;
   base_system_prompt: string;
@@ -56,6 +59,8 @@ type AgentRowType = {
 
 type DBAgentType = {
   id: string;
+  name: string;
+  description: string;
   model: string;
   registrationPieceCid: string;
   baseSystemPrompt: string;
@@ -172,8 +177,8 @@ async function deleteChat(args: { chatId: string }) {
 async function createAgent(args: { agentData: AgentData }) {
   const { agentData } = args;
   const result = await sql`
-        INSERT INTO agents (name, description, registration_piece_cid, base_system_prompt, knowledge_bases, tools, mcp_servers)
-        VALUES (${agentData.name}, ${agentData.description}, ${agentData.registrationPieceCid}, ${agentData.baseSystemPrompt}, ${JSON.stringify(agentData.knowledgeBases)}, ${JSON.stringify(agentData.tools)}, ${JSON.stringify(agentData.mcpServers)})
+        INSERT INTO agents (name, description, model, registration_piece_cid, base_system_prompt, knowledge_bases, tools, mcp_servers)
+        VALUES (${agentData.name}, ${agentData.description}, ${agentData.model}, ${agentData.registrationPieceCid}, ${agentData.baseSystemPrompt}, ${JSON.stringify(agentData.knowledgeBases)}, ${JSON.stringify(agentData.tools)}, ${JSON.stringify(agentData.mcpServers)})
         RETURNING id
     `;
   return result[0];
@@ -188,6 +193,8 @@ async function getAgent(args: { id: string }) {
   const row = result[0] as AgentRowType;
   const agent = {
     id: String(row.id),
+    name: row.name,
+    description: row.description,
     model: row.model,
     registrationPieceCid: row.registration_piece_cid,
     baseSystemPrompt: row.base_system_prompt,
@@ -209,6 +216,10 @@ async function updateAgent(args: { id: string; updates: Partial<AgentData> }) {
   if (updates.description !== undefined) {
     fields.push("description = ?");
     values.push(updates.description);
+  }
+  if (updates.model !== undefined) {
+    fields.push("model = ?");
+    values.push(updates.model);
   }
   if (updates.registrationPieceCid !== undefined) {
     fields.push("registration_piece_cid = ?");
@@ -247,6 +258,8 @@ async function getAllAgents(args: {}) {
     const parsedRow = row as AgentRowType;
     const agent = {
       id: String(parsedRow.id),
+      name: parsedRow.name,
+      description: parsedRow.description,
       model: parsedRow.model,
       registrationPieceCid: parsedRow.registration_piece_cid,
       baseSystemPrompt: parsedRow.base_system_prompt,

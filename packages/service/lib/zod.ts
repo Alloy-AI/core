@@ -204,6 +204,8 @@ export const RawAgentRowSchema = z.object({
 
 export const DBAgentSchema = z.object({
   id: z.string(),
+  name: z.string(),
+  description: z.string(),
   model: z.string(),
   registrationPieceCid: z.string(),
   baseSystemPrompt: z.string(),

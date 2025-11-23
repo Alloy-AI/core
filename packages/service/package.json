@@ -2,7 +2,8 @@
   "name": "@alloy/executor",
   "scripts": {
     "oasis:push": "docker compose build; oasis rofl update; oasis rofl build; oasis rofl update; oasis rofl deploy",
-    "migrate": "bun run ./db/migrate.ts"
+    "db:migrate": "bun run ./db/migrate.ts",
+    "db:down": "bun run ./db/down.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.71",
