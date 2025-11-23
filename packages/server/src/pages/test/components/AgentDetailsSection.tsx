@@ -34,6 +34,10 @@ export function AgentDetailsSection({
   } = useUpdateAgentPrompt();
   const [newPrompt, setNewPrompt] = useState("You are a helpful assistant.");
   const { mutate: addTool, isPending: isAddingTool } = useAddTool();
+  const [toolLabel, setToolLabel] = useState("weather-api");
+  const [toolKind, setToolKind] = useState<"builtin" | "mcp">("builtin");
+  const [toolRef, setToolRef] = useState("weather-api");
+  const [toolConfig, setToolConfig] = useState("{}");
   const { mutate: removeTool, isPending: isRemovingTool } = useRemoveTool();
   const { mutate: toggleTool, isPending: isTogglingTool } = useToggleTool();
 
@@ -90,6 +94,7 @@ export function AgentDetailsSection({
                 value={newPrompt}
                 onChange={(e) => setNewPrompt(e.target.value)}
                 className="text-sm min-h-[80px] bg-background border-input flex-1"
+                placeholder="You are a helpful assistant."
               />
               <Button
                 size="sm"
@@ -107,26 +112,101 @@ export function AgentDetailsSection({
           </div>
 
           <div className="pt-4 border-t border-border">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-foreground">Tools</h3>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  addTool({
-                    agentId: selectedAgentId,
-                    tool: {
-                      label: "Test Tool " + Math.floor(Math.random() * 100),
-                      kind: "builtin",
-                      ref: "weather-api",
-                      config: {},
-                    },
-                  })
-                }
-                disabled={isAddingTool}
-              >
-                {isAddingTool ? "Adding..." : "Add Test Tool"}
-              </Button>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-foreground mb-4">Tools</h3>
+              <div className="grid gap-4 p-4 bg-muted/30 border border-border rounded-md">
+                <div className="grid gap-2">
+                  <label
+                    htmlFor="toolLabel"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    Tool Label *
+                  </label>
+                  <Input
+                    id="toolLabel"
+                    value={toolLabel}
+                    onChange={(e) => setToolLabel(e.target.value)}
+                    className="h-9 text-sm bg-background border-input"
+                    placeholder="weather-api"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label
+                    htmlFor="toolKind"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    Tool Kind *
+                  </label>
+                  <select
+                    id="toolKind"
+                    value={toolKind}
+                    onChange={(e) => setToolKind(e.target.value as "builtin" | "mcp")}
+                    className="h-9 text-sm bg-background border border-input rounded-md px-3"
+                  >
+                    <option value="builtin">builtin</option>
+                    <option value="mcp">mcp</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <label
+                    htmlFor="toolRef"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    Tool Ref *
+                  </label>
+                  <Input
+                    id="toolRef"
+                    value={toolRef}
+                    onChange={(e) => setToolRef(e.target.value)}
+                    className="h-9 text-sm bg-background border-input"
+                    placeholder="weather-api"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label
+                    htmlFor="toolConfig"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    Tool Config (JSON)
+                  </label>
+                  <Textarea
+                    id="toolConfig"
+                    value={toolConfig}
+                    onChange={(e) => setToolConfig(e.target.value)}
+                    className="text-xs min-h-[60px] bg-background border-input font-mono"
+                    placeholder='{}'
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    let parsedConfig = {};
+                    try {
+                      parsedConfig = toolConfig.trim() ? JSON.parse(toolConfig) : {};
+                    } catch {
+                      alert("Invalid JSON config. Using empty object.");
+                    }
+                    addTool({
+                      agentId: selectedAgentId,
+                      tool: {
+                        label: toolLabel,
+                        kind: toolKind,
+                        ref: toolRef,
+                        config: parsedConfig,
+                      },
+                    });
+                    // Reset form
+                    setToolLabel("weather-api");
+                    setToolKind("builtin");
+                    setToolRef("weather-api");
+                    setToolConfig("{}");
+                  }}
+                  disabled={isAddingTool || !toolLabel || !toolRef}
+                >
+                  {isAddingTool ? "Adding..." : "Add Tool"}
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
