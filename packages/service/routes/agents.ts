@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { privateKeyToAddress } from "viem/accounts";
 import z from "zod";
 import { db } from "../db/client";
+import { Agent } from "../lib/Agent";
 import { appd } from "../lib/appd";
 import { identityRegistry } from "../lib/erc80004.defs";
 import { getEvmClient, isSupportedChain } from "../lib/evm";
@@ -13,7 +14,6 @@ import { getOrCreateDataset, serverAddressSynapse } from "../lib/synapse";
 import { tryCatch } from "../lib/tryCatch";
 import { authenticated } from "../middleware/auth";
 import type { AgentDescriptor, EIP155Address } from "../types/agent";
-import { Agent } from "../lib/Agent";
 
 const app = new Hono();
 

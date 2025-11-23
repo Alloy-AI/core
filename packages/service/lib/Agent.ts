@@ -1,9 +1,9 @@
-import { createOpenAI } from "@ai-sdk/openai";
-import { generateText, type ToolSet } from "ai";
 import { experimental_createMCPClient } from "@ai-sdk/mcp";
+import { createOpenAI } from "@ai-sdk/openai";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { generateText, type ToolSet } from "ai";
 import { db } from "../db/client";
 import type { AgentDescriptor, IAgent } from "../types/agent";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 export class Agent implements IAgent {
   static async fromId({ id }: { id: string }) {

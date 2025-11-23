@@ -1,5 +1,4 @@
 import {
-  HouseIcon,
   PuzzlePieceIcon,
   RobotIcon,
   SquaresFourIcon,
