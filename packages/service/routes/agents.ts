@@ -13,6 +13,7 @@ import { tryCatch } from "../lib/tryCatch";
 import { authenticated } from "../middleware/auth";
 import type { AgentDescriptor, EIP155Address } from "../types/agent";
 import { Agent } from "../lib/Agent";
+import { getAgentCard } from "../lib/a2a";
 import db from "../db/client";
 import schema from "../db/schema";
 import { eq } from "drizzle-orm";
@@ -274,7 +275,54 @@ app.post("/", authenticated, async (c) => {
   );
 });
 
-//@jriyyya
+// AgentCard endpoint - well-known path for agent discovery by address
+app.get("/:address/.well-known/agent-card.json", async (ctx) => {
+  const address = ctx.req.param("address");
+  
+  // Find agent by address
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.address, address))
+    .limit(1);
+
+  if (!agent) {
+    return ctx.json({ error: "Agent not found" }, { status: 404 });
+  }
+
+  // Get agent card for this agent
+  const agentCard = await getAgentCard({ agentId: agent.id.toString() });
+
+  if (!agentCard) {
+    return ctx.json(
+      { error: "Agent card not found for this agent" },
+      { status: 404 },
+    );
+  }
+
+  // Return raw JSON (not wrapped in respond.ok format) for A2A compliance
+  return ctx.json(agentCard, 200);
+});
+
+app.get("/:address/registration.json", async (ctx) => {
+  const address = ctx.req.param("address");
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.address, address));
+
+  if (!agent) {
+    return ctx.json({ error: "Agent not found" }, { status: 404 });
+  }
+
+  const registrationPieceCid = agent.registrationPieceCid;
+  const ds = await getOrCreateDataset();
+
+  const registrationBytes = await ds.download(registrationPieceCid);
+  const registration = jsonParse(new TextDecoder().decode(registrationBytes));
+
+  return ctx.json(registration, { status: 200 });
+});
 
 app.get("/:id", authenticated, async (c) => {
   const id = c.req.param("id");
