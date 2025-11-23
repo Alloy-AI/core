@@ -1,4 +1,17 @@
 CREATE TABLE
+    IF NOT EXISTS agents (
+        id SERIAL PRIMARY KEY,
+        model VARCHAR(255) NOT NULL,
+        registration_piece_cid VARCHAR(255) NOT NULL,
+        base_system_prompt TEXT NOT NULL,
+        knowledge_bases JSONB DEFAULT '[]'::jsonb,
+        tools JSONB DEFAULT '[]'::jsonb,
+        mcp_servers JSONB DEFAULT '[]'::jsonb
+    );
+
+CREATE INDEX IF NOT EXISTS idx_agents_id ON agents (id);
+
+CREATE TABLE
     IF NOT EXISTS chats (
         id VARCHAR(255) PRIMARY KEY,
         wallet_address VARCHAR(255) NOT NULL,
@@ -22,16 +35,3 @@ CREATE TABLE
 CREATE INDEX IF NOT EXISTS idx_chat_id ON chat_history (chat_id);
 
 CREATE INDEX IF NOT EXISTS idx_timestamp ON chat_history (timestamp);
-
-CREATE TABLE
-    IF NOT EXISTS agents (
-        id SERIAL PRIMARY KEY,
-        model VARCHAR(255) NOT NULL,
-        registration_piece_cid VARCHAR(255) NOT NULL,
-        base_system_prompt TEXT NOT NULL,
-        knowledge_bases JSONB DEFAULT '[]'::jsonb,
-        tools JSONB DEFAULT '[]'::jsonb,
-        mcp_servers JSONB DEFAULT '[]'::jsonb
-    );
-
-CREATE INDEX IF NOT EXISTS idx_agents_id ON agents (id);
