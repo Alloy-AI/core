@@ -128,8 +128,8 @@ export const AgentDataSchema = AgentDescriptorSchema.omit({
   id: true,
   registrationPieceCid: true,
 }).extend({
-  name: z.string(),
-  description: z.string(),
+  name: z.string().optional(),
+  description: z.string().optional(),
 });
 
 export const CreateAgentSchema = z.object({
@@ -212,4 +212,95 @@ export const DBAgentSchema = z.object({
   knowledgeBases: z.array(KnowledgeBaseSchema),
   tools: z.array(ToolSchema),
   mcpServers: z.array(MCPServerSchema),
+});
+
+// A2A AgentCard Schemas
+export const AuthSchemeSchema = z.object({
+  scheme: z.literal("none"),
+});
+
+export const ProviderSchema = z.object({
+  name: z.string(),
+  url: z.string().url().optional(),
+  support_contact: z.string().optional(),
+});
+
+export const TEEDetailsSchema = z.object({
+  type: z.string(),
+  attestationEndpoint: z.string().url().optional(),
+  publicKey: z.string().optional(),
+  description: z.string().optional(),
+});
+
+export const CapabilitiesSchema = z.object({
+  a2aVersion: z.string(),
+  mcpVersion: z.string().optional(),
+  supportedMessageParts: z.array(z.string()).optional(),
+  supportsPushNotifications: z.boolean().optional(),
+  supportsAuthenticatedExtendedCard: z.boolean().optional(),
+  teeDetails: TEEDetailsSchema.optional(),
+});
+
+export const SkillSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  input_schema: z.record(z.string(), z.any()).optional(),
+  output_schema: z.record(z.string(), z.any()).optional(),
+});
+
+export const AgentCardSchema = z.object({
+  schemaVersion: z.string(),
+  humanReadableId: z.string(),
+  agentVersion: z.string(),
+  name: z.string(),
+  description: z.string(),
+  url: z.string().url(),
+  provider: ProviderSchema,
+  capabilities: CapabilitiesSchema,
+  authSchemes: z.array(AuthSchemeSchema).min(1),
+  skills: z.array(SkillSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  iconUrl: z.string().url().optional(),
+  lastUpdated: z.string().optional(),
+});
+
+export const CreateAgentCardSchema = z.object({
+  agentId: z.string(),
+  card: AgentCardSchema,
+});
+
+export const GetAgentCardSchema = z.object({
+  id: z.string().optional(),
+  humanReadableId: z.string().optional(),
+  agentId: z.string().optional(),
+});
+
+export const UpdateAgentCardSchema = z.object({
+  id: z.string(),
+  updates: AgentCardSchema.partial(),
+});
+
+export const DeleteAgentCardSchema = z.object({
+  id: z.string(),
+});
+
+export const RawAgentCardRowSchema = z.object({
+  id: z.number(),
+  agent_id: z.number(),
+  human_readable_id: z.string(),
+  schema_version: z.string(),
+  agent_version: z.string(),
+  name: z.string(),
+  description: z.string(),
+  url: z.string(),
+  provider: z.string(), // JSON string
+  capabilities: z.string(), // JSON string
+  auth_schemes: z.string(), // JSON string
+  skills: z.string(), // JSON string
+  tags: z.string(), // JSON string
+  icon_url: z.string().nullable(),
+  last_updated: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
 });
