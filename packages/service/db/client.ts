@@ -1,7 +1,15 @@
 import { SQL } from "bun";
 import { decryptSelf, encryptSelf } from "../lib/crypto";
-import type { AgentDescriptor } from "../types/agent";
+import {
+  AgentCardSchema,
+  CreateAgentCardSchema,
+  DeleteAgentCardSchema,
+  GetAgentCardSchema,
+  RawAgentCardRowSchema,
+  UpdateAgentCardSchema,
+} from "../lib/zod";
 import { env } from "../env";
+import z from "zod";
 
 const sql = new SQL(env.PG_URI);
 
@@ -271,6 +279,174 @@ async function getAllAgents(args: {}) {
   });
 }
 
+async function createAgentCard(args: { agentId: string; card: z.infer<typeof AgentCardSchema> }) {
+  const validatedArgs = CreateAgentCardSchema.parse(args);
+  const { agentId, card } = validatedArgs;
+  
+  const result = await sql`
+    INSERT INTO agent_cards (
+      agent_id, human_readable_id, schema_version, agent_version,
+      name, description, url, provider, capabilities, auth_schemes,
+      skills, tags, icon_url, last_updated
+    )
+    VALUES (
+      ${agentId}, ${card.humanReadableId}, ${card.schemaVersion}, ${card.agentVersion},
+      ${card.name}, ${card.description}, ${card.url},
+      ${JSON.stringify(card.provider)}, ${JSON.stringify(card.capabilities)},
+      ${JSON.stringify(card.authSchemes)}, ${JSON.stringify(card.skills || [])},
+      ${JSON.stringify(card.tags || [])}, ${card.iconUrl || null},
+      ${card.lastUpdated || new Date().toISOString()}
+    )
+    RETURNING id
+  `;
+  return result[0];
+}
+
+async function getAgentCard(args: { id?: string; humanReadableId?: string; agentId?: string }) {
+  const validatedArgs = GetAgentCardSchema.parse(args);
+  const { id, humanReadableId, agentId } = validatedArgs;
+  
+  let result;
+  if (id) {
+    result = await sql`SELECT * FROM agent_cards WHERE id = ${id}`;
+  } else if (humanReadableId) {
+    result = await sql`SELECT * FROM agent_cards WHERE human_readable_id = ${humanReadableId}`;
+  } else if (agentId) {
+    result = await sql`SELECT * FROM agent_cards WHERE agent_id = ${agentId}`;
+  } else {
+    return null;
+  }
+  
+  if (result.length === 0) return null;
+  
+  // Parse the raw row, handling Date objects from database
+  const rawRow = result[0];
+  const row = {
+    ...rawRow,
+    last_updated: rawRow.last_updated instanceof Date 
+      ? rawRow.last_updated.toISOString() 
+      : typeof rawRow.last_updated === 'string' 
+        ? rawRow.last_updated 
+        : String(rawRow.last_updated),
+    created_at: rawRow.created_at instanceof Date 
+      ? rawRow.created_at.toISOString() 
+      : typeof rawRow.created_at === 'string' 
+        ? rawRow.created_at 
+        : String(rawRow.created_at),
+    updated_at: rawRow.updated_at instanceof Date 
+      ? rawRow.updated_at.toISOString() 
+      : typeof rawRow.updated_at === 'string' 
+        ? rawRow.updated_at 
+        : String(rawRow.updated_at),
+  };
+  
+  const parsedRow = RawAgentCardRowSchema.parse(row);
+  
+  const card = {
+    id: String(parsedRow.id),
+    agentId: String(parsedRow.agent_id),
+    schemaVersion: parsedRow.schema_version,
+    humanReadableId: parsedRow.human_readable_id,
+    agentVersion: parsedRow.agent_version,
+    name: parsedRow.name,
+    description: parsedRow.description,
+    url: parsedRow.url,
+    provider: JSON.parse(parsedRow.provider),
+    capabilities: JSON.parse(parsedRow.capabilities),
+    authSchemes: JSON.parse(parsedRow.auth_schemes),
+    skills: JSON.parse(parsedRow.skills),
+    tags: JSON.parse(parsedRow.tags),
+    iconUrl: parsedRow.icon_url,
+    lastUpdated: parsedRow.last_updated,
+    createdAt: parsedRow.created_at,
+    updatedAt: parsedRow.updated_at,
+  };
+  
+  const ExtendedAgentCardSchema = AgentCardSchema.extend({
+    id: z.string(),
+    agentId: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  });
+  
+  return ExtendedAgentCardSchema.parse(card);
+}
+
+async function updateAgentCard(args: { id: string; updates: Partial<z.infer<typeof AgentCardSchema>> }) {
+  const validatedArgs = UpdateAgentCardSchema.parse(args);
+  const { id, updates } = validatedArgs;
+  
+  const fields: string[] = [];
+  const values: any[] = [];
+  
+  if (updates.schemaVersion !== undefined) {
+    fields.push("schema_version = ?");
+    values.push(updates.schemaVersion);
+  }
+  if (updates.humanReadableId !== undefined) {
+    fields.push("human_readable_id = ?");
+    values.push(updates.humanReadableId);
+  }
+  if (updates.agentVersion !== undefined) {
+    fields.push("agent_version = ?");
+    values.push(updates.agentVersion);
+  }
+  if (updates.name !== undefined) {
+    fields.push("name = ?");
+    values.push(updates.name);
+  }
+  if (updates.description !== undefined) {
+    fields.push("description = ?");
+    values.push(updates.description);
+  }
+  if (updates.url !== undefined) {
+    fields.push("url = ?");
+    values.push(updates.url);
+  }
+  if (updates.provider !== undefined) {
+    fields.push("provider = ?");
+    values.push(JSON.stringify(updates.provider));
+  }
+  if (updates.capabilities !== undefined) {
+    fields.push("capabilities = ?");
+    values.push(JSON.stringify(updates.capabilities));
+  }
+  if (updates.authSchemes !== undefined) {
+    fields.push("auth_schemes = ?");
+    values.push(JSON.stringify(updates.authSchemes));
+  }
+  if (updates.skills !== undefined) {
+    fields.push("skills = ?");
+    values.push(JSON.stringify(updates.skills));
+  }
+  if (updates.tags !== undefined) {
+    fields.push("tags = ?");
+    values.push(JSON.stringify(updates.tags));
+  }
+  if (updates.iconUrl !== undefined) {
+    fields.push("icon_url = ?");
+    values.push(updates.iconUrl || null);
+  }
+  if (updates.lastUpdated !== undefined) {
+    fields.push("last_updated = ?");
+    values.push(updates.lastUpdated);
+  }
+  
+  if (fields.length === 0) return;
+  
+  fields.push("updated_at = CURRENT_TIMESTAMP");
+  values.push(id);
+  
+  const query = `UPDATE agent_cards SET ${fields.join(", ")} WHERE id = ?`;
+  await sql.unsafe(query, values);
+}
+
+async function deleteAgentCard(args: { id: string }) {
+  const validatedArgs = DeleteAgentCardSchema.parse(args);
+  const { id } = validatedArgs;
+  await sql`DELETE FROM agent_cards WHERE id = ${id}`;
+}
+
 export const db = {
     $client: sql,
   insertMessage,
@@ -287,4 +463,8 @@ export const db = {
   updateAgent,
   deleteAgent,
   getAllAgents,
+  createAgentCard,
+  getAgentCard,
+  updateAgentCard,
+  deleteAgentCard,
 };
