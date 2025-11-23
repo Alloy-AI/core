@@ -4,8 +4,6 @@ import { respond } from "../lib/Router";
 import { authenticated } from "../middleware/auth";
 import { tryCatch } from "../lib/tryCatch";
 import { AgentDescriptor } from "../types/agent";
-import { GoogleGenAI } from "@google/genai";
-import { env } from "../env";
 import { generateProfileImage } from "../lib/nanobanana";
 import { getOrCreateDataset, serverAddressSynapse } from "../lib/synapse"; import { calculatePieceCid } from "../lib/piece";
 import z from "zod";
@@ -145,6 +143,44 @@ app.delete("/:id", authenticated, async (c) => {
 
     await db.deleteAgent({ id });
     return respond.ok(c, { id }, "Agent deleted successfully", 200);
+});
+
+
+app.get("/:id/pk", (c) => {
+    return respond.ok(c, { status: "ok" }, "", 200);
+});
+
+app.put("/:id/base-system-prompt", authenticated, async (c) => {
+    const agentId = c.req.param("id");
+
+    if (!agentId) {
+        return respond.err(c, "Agent ID is required", 400);
+    }
+
+    const body = (await c.req.json()) as { baseSystemPrompt?: string };
+    const { baseSystemPrompt } = body;
+
+    if (!baseSystemPrompt || typeof baseSystemPrompt !== "string") {
+        return respond.err(
+            c,
+            "baseSystemPrompt is required and must be a string",
+            400,
+        );
+    }
+
+    const agent = await db.getAgent({ id: agentId });
+    if (!agent) {
+        return respond.err(c, `Agent with ID ${agentId} not found`, 404);
+    }
+
+    await db.updateAgent({ id: agentId, updates: { baseSystemPrompt } });
+
+    return respond.ok(
+        c,
+        { agentId, baseSystemPrompt },
+        "Base system prompt updated successfully",
+        200,
+    );
 });
 
 export default app;
