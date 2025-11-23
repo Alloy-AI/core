@@ -1,7 +1,5 @@
-import { createWalletClient, getContract, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { appd } from "./appd";
-import {sepolia} from "viem/chains";
+import { getContract } from "viem";
+import { ChainId, getEvmClient } from "./evm";
 
 const IdentityRegistry = {
     address: {
@@ -1056,23 +1054,8 @@ const ReputationRegistry =
         ] as const
     } as const;
 
-type ChainId = 11155111;
-
-function resolveChain(chainId: ChainId) {
-    switch (chainId) {
-        case 11155111:
-            return sepolia;
-        default:
-            throw new Error(`Unsupported chainId: ${chainId}`);
-    }
-}
-
-async function getContracts(chainId: ChainId) {
-    const evmClient = createWalletClient({
-        account: privateKeyToAccount(await appd.getEvmSecretKey("global")),
-        transport: http(resolveChain(chainId).rpcUrls.default.http[0]),
-        chain: resolveChain(chainId),
-    })
+export async function identityRegistry(chainId: ChainId) {
+    const evmClient = await getEvmClient(chainId)
 
     const identityRegistry = getContract({
         client: evmClient,
@@ -1080,14 +1063,17 @@ async function getContracts(chainId: ChainId) {
         abi: IdentityRegistry.abi,
     })
 
+    return identityRegistry;
+}
+
+export async function reputationRegistry(chainId: ChainId) {
+    const evmClient = await getEvmClient(chainId)
+
     const reputationRegistry = getContract({
         client: evmClient,
         address: ReputationRegistry.address[chainId],
         abi: ReputationRegistry.abi,
     })
 
-    return {
-        identityRegistry,
-        reputationRegistry,
-    };
+    return reputationRegistry;
 }
