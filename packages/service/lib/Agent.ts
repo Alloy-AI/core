@@ -4,8 +4,11 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import db from "../db/client";
 import { eq, and } from "drizzle-orm";
 import schema from "../db/schema";
-import { createOpenAI } from "@ai-sdk/openai";
-import { generateText, ModelMessage } from "ai";
+import { ChatOpenAI } from "@langchain/openai";
+import { StateGraph, END, START, Annotation } from "@langchain/langgraph";
+import { HumanMessage, AIMessage, SystemMessage, type BaseMessage, ToolMessage } from "@langchain/core/messages";
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import { z } from "zod";
 import { env } from "../env";
 import type { Hex } from "viem";
 import { tryCatch } from "./tryCatch";
@@ -104,18 +107,10 @@ export class Agent implements IAgent {
   }): Promise<string> {
     const { message, chatId } = args;
 
-    const messages: Array<ModelMessage> = [];
+    const messages: BaseMessage[] = [];
 
     if (this.agentDescriptor.baseSystemPrompt) {
-      messages.push({
-        role: "assistant",
-        content: [
-          {
-            type: "text",
-            text: this.agentDescriptor.baseSystemPrompt,
-          },
-        ],
-      });
+      messages.push(new SystemMessage(this.agentDescriptor.baseSystemPrompt));
     }
 
     if (chatId) {
@@ -125,12 +120,13 @@ export class Agent implements IAgent {
           .from(schema.chatHistory)
           .where(eq(schema.chatHistory.chatId, chatId));
         for (const msg of history) {
+          console.log(msg);
           if (msg.role === "user" || msg.role === "human") {
-            messages.push({ role: "user", content: msg.content });
+            messages.push(new HumanMessage(msg.content));
           } else if (msg.role === "assistant" || msg.role === "ai") {
-            messages.push({ role: "assistant", content: msg.content });
+            messages.push(new AIMessage(msg.content));
           } else if (msg.role === "system") {
-            messages.push({ role: "system", content: msg.content });
+            messages.push(new SystemMessage(msg.content));
           }
         }
       } catch (error) {
@@ -138,16 +134,9 @@ export class Agent implements IAgent {
       }
     }
 
-    messages.push({
-      role: "user",
-      content: [
-        {
-          type: "text",
-          text: message,
-        },
-      ],
-    });
+    messages.push(new HumanMessage(message));
 
+    // Collect MCP tools
     const evmMcpClient = await experimental_createMCPClient({
       transport: new StreamableHTTPClientTransport(
         new URL(env.EVM_MCP_SERVER_URL),
@@ -158,7 +147,7 @@ export class Agent implements IAgent {
         },
       ),
     });
-    const tools = await evmMcpClient.tools();
+    const mcpTools = await evmMcpClient.tools();
 
     for (const mcp of this.agentDescriptor.mcpServers) {
       const mcpClient = await experimental_createMCPClient({
@@ -166,23 +155,114 @@ export class Agent implements IAgent {
           requestInit: { headers: mcp.authHeaders },
         }),
       });
-      const mcpTools = await mcpClient.tools();
-      Object.assign(tools, mcpTools);
+      const mcpClientTools = await mcpClient.tools();
+      Object.assign(mcpTools, mcpClientTools);
     }
 
-    const llm = createOpenAI({
+    // Convert MCP tools to LangChain tools
+    const langchainTools = Object.entries(mcpTools).map(([name, tool]) => {
+      const toolAny = tool as unknown as {
+        description?: string;
+        parameters?: { properties?: Record<string, unknown> };
+        execute: (input: unknown, options?: unknown) => Promise<unknown>;
+      };
+      return new DynamicStructuredTool({
+        name: name,
+        description: toolAny.description || `Tool: ${name}`,
+        schema: z.object(toolAny.parameters?.properties || {}),
+        func: async (input) => {
+          const result = await Promise.resolve(toolAny.execute(input, {}));
+          return JSON.stringify(result);
+        },
+      });
+    });
+
+    // Initialize LLM
+    const llm = new ChatOpenAI({
       apiKey: process.env.GROQ_API_KEY,
-      baseURL: "https://api.groq.com/openai/v1",
-    });
-    const { text } = await generateText({
-      model: llm(this.agentDescriptor.model),
-      messages: messages,
+      configuration: {
+        baseURL: "https://api.groq.com/openai/v1",
+      },
+      model: this.agentDescriptor.model,
       temperature: 0.7,
-      tools: tools,
     });
 
-    // await this.mcpClient.disconnect();
+    // Define state annotation
+    const StateAnnotation = Annotation.Root({
+      messages: Annotation<BaseMessage[]>({
+        reducer: (x, y) => x.concat(y),
+      }),
+    });
 
-    return text;
+    // Define the agent node
+    const callModel = async (state: typeof StateAnnotation.State) => {
+      const modelWithTools = llm.bindTools(langchainTools);
+      const response = await modelWithTools.invoke(state.messages);
+      return { messages: [response] };
+    };
+
+    // Define the tool execution node
+    const callTools = async (state: typeof StateAnnotation.State) => {
+      const lastMessage = state.messages[state.messages.length - 1] as AIMessage;
+      const toolCalls = lastMessage.tool_calls || [];
+
+      const toolMessages: ToolMessage[] = [];
+
+      for (const toolCall of toolCalls) {
+        const tool = langchainTools.find((t) => t.name === toolCall.name);
+        if (tool) {
+          try {
+            const result = await tool.invoke(toolCall.args);
+            toolMessages.push(
+              new ToolMessage({
+                tool_call_id: toolCall.id || "",
+                content: result,
+              })
+            );
+          } catch (error) {
+            toolMessages.push(
+              new ToolMessage({
+                tool_call_id: toolCall.id || "",
+                content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+              })
+            );
+          }
+        }
+      }
+
+      return { messages: toolMessages };
+    };
+
+    // Routing function to decide whether to continue or end
+    const shouldContinue = (state: typeof StateAnnotation.State) => {
+      const lastMessage = state.messages[state.messages.length - 1] as AIMessage;
+      if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
+        return "tools";
+      }
+      return END;
+    };
+
+    // Build the graph
+    const workflow = new StateGraph(StateAnnotation)
+      .addNode("agent", callModel)
+      .addNode("tools", callTools)
+      .addEdge(START, "agent")
+      .addConditionalEdges("agent", shouldContinue, {
+        tools: "tools",
+        [END]: END,
+      })
+      .addEdge("tools", "agent");
+
+    const app = workflow.compile();
+
+    // Execute the graph
+    const result = await app.invoke({
+      messages: messages,
+    });
+
+    console.log(result);
+
+    const lastMessage = result.messages[result.messages.length - 1];
+    return lastMessage.content as string;
   }
 }
