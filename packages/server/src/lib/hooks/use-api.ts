@@ -27,7 +27,7 @@ export interface Tool {
 export interface Chat {
   id: string;
   walletAddress: string;
-  agentId?: number;
+  agentId?: number | null;
   createdAt: string;
 }
 
@@ -198,6 +198,35 @@ export function useCreateChat() {
     },
     onError: (error: Error) => {
       toast.error(`Failed to create chat: ${error.message}`);
+    },
+  });
+}
+
+export function useUpdateChatAgent() {
+  const queryClient = useQueryClient();
+  const { headers } = useAuthHeaders();
+
+  return useMutation({
+    mutationFn: async ({
+      chatId,
+      agentId,
+    }: {
+      chatId: string;
+      agentId: number;
+    }) => {
+      const res = await apiClient.put<ApiResponse<{ chat: Chat }>>(
+        `/chats/${chatId}`,
+        { agentId },
+        { headers },
+      );
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
+      toast.success("Agent associated with chat");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to associate agent: ${error.message}`);
     },
   });
 }

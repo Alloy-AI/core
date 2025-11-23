@@ -28,20 +28,80 @@ app.post("/", authenticated, async (ctx) => {
     })
     .safeParse(rawBody);
 
+  if (!parsedBody.success) {
+    return respond.err(
+      ctx,
+      `Invalid request body: ${parsedBody.error.message}`,
+      400,
+    );
+  }
+
   const walletAddress = ctx.var.userWallet;
   const chatId = Bun.randomUUIDv7();
-
-  // Optional: if body contains agentId, we can link it.
-  const body = await ctx.req.json().catch(() => ({}));
-  const agentId = body.agentId ? Number(body.agentId) : undefined;
 
   await db.insert(schema.chats).values({
     id: chatId,
     walletAddress,
-    agentId,
+    agentId: parsedBody.data.agentId,
   });
 
   return respond.ok(ctx, { chatId }, "Chat registered successfully", 201);
+});
+
+// Update chat (e.g., associate an agent)
+app.put("/:id", authenticated, async (ctx) => {
+  const chatId = ctx.req.param("id");
+  const body = await ctx.req.json();
+
+  const parsedBody = z
+    .object({
+      agentId: z.number().optional(),
+    })
+    .safeParse(body);
+
+  if (!parsedBody.success) {
+    return respond.err(
+      ctx,
+      `Invalid request body: ${parsedBody.error.message}`,
+      400,
+    );
+  }
+
+  // Verify ownership
+  const [chat] = await db
+    .select()
+    .from(schema.chats)
+    .where(eq(schema.chats.id, chatId));
+  if (!chat) {
+    return respond.err(ctx, "Chat not found", 404);
+  }
+  if (chat.walletAddress !== ctx.var.userWallet) {
+    return respond.err(ctx, "Unauthorized", 403);
+  }
+
+  // Update agentId if provided
+  if (parsedBody.data.agentId !== undefined) {
+    // Verify agent exists
+    const [agent] = await db
+      .select()
+      .from(schema.agents)
+      .where(eq(schema.agents.id, parsedBody.data.agentId));
+    if (!agent) {
+      return respond.err(ctx, "Agent not found", 404);
+    }
+
+    await db
+      .update(schema.chats)
+      .set({ agentId: parsedBody.data.agentId })
+      .where(eq(schema.chats.id, chatId));
+  }
+
+  const [updatedChat] = await db
+    .select()
+    .from(schema.chats)
+    .where(eq(schema.chats.id, chatId));
+
+  return respond.ok(ctx, { chat: updatedChat }, "Chat updated successfully", 200);
 });
 
 // Get message history for a specific conversation

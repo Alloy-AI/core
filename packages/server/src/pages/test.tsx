@@ -7,6 +7,7 @@ import {
   useChats,
   useChatHistory,
   useCreateChat,
+  useUpdateChatAgent,
   useSendMessage,
   useAddTool,
   useRemoveTool,
@@ -16,6 +17,7 @@ import {
 import { Button } from "@/src/lib/components/ui/button";
 import { Input } from "@/src/lib/components/ui/input";
 import { Textarea } from "@/src/lib/components/ui/textarea";
+import { Skeleton } from "@/src/lib/components/ui/skeleton";
 
 function Section({
   title,
@@ -44,28 +46,66 @@ function JsonPre({ data }: { data: unknown }) {
 
 export default function TestPage() {
   // Agents State
-  const { data: agents, refetch: refetchAgents } = useAgents();
-  const { mutate: createAgent } = useCreateAgent();
+  const {
+    data: agents,
+    isLoading: isLoadingAgents,
+    isError: isErrorAgents,
+    error: errorAgents,
+    refetch: refetchAgents,
+  } = useAgents();
+  const {
+    mutate: createAgent,
+    isPending: isCreatingAgent,
+  } = useCreateAgent();
   const [newAgentName, setNewAgentName] = useState("Debug Agent");
 
   // Single Agent State
   const [selectedAgentId, setSelectedAgentId] = useState("");
-  const { data: agent } = useAgent(selectedAgentId);
-  const { mutate: updatePrompt } = useUpdateAgentPrompt();
+  const {
+    data: agent,
+    isLoading: isLoadingAgent,
+    isError: isErrorAgent,
+    error: errorAgent,
+  } = useAgent(selectedAgentId);
+  const {
+    mutate: updatePrompt,
+    isPending: isUpdatingPrompt,
+  } = useUpdateAgentPrompt();
   const [newPrompt, setNewPrompt] = useState("You are a helpful assistant.");
-  const { mutate: addTool } = useAddTool();
-  const { mutate: removeTool } = useRemoveTool();
-  const { mutate: toggleTool } = useToggleTool();
+  const { mutate: addTool, isPending: isAddingTool } = useAddTool();
+  const { mutate: removeTool, isPending: isRemovingTool } = useRemoveTool();
+  const { mutate: toggleTool, isPending: isTogglingTool } = useToggleTool();
 
   // Chats State
-  const { data: chats, refetch: refetchChats } = useChats();
-  const { mutate: createChat } = useCreateChat();
+  const {
+    data: chats,
+    isLoading: isLoadingChats,
+    isError: isErrorChats,
+    error: errorChats,
+    refetch: refetchChats,
+  } = useChats();
+  const {
+    mutate: createChat,
+    isPending: isCreatingChat,
+  } = useCreateChat();
+  const {
+    mutate: updateChatAgent,
+    isPending: isUpdatingChatAgent,
+  } = useUpdateChatAgent();
   const [chatAgentId, setChatAgentId] = useState<string>("");
 
   // Chat Interaction State
   const [activeChatId, setActiveChatId] = useState("");
-  const { data: history } = useChatHistory(activeChatId);
-  const { mutate: sendMessage } = useSendMessage();
+  const {
+    data: history,
+    isLoading: isLoadingHistory,
+    isError: isErrorHistory,
+    error: errorHistory,
+  } = useChatHistory(activeChatId);
+  const {
+    mutate: sendMessage,
+    isPending: isSendingMessage,
+  } = useSendMessage();
   const [message, setMessage] = useState("");
 
   return (
@@ -106,22 +146,41 @@ export default function TestPage() {
                   chains: [11155111],
                 })
               }
+              disabled={isCreatingAgent}
               className="h-9"
             >
-              Create Agent
+              {isCreatingAgent ? "Creating..." : "Create Agent"}
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => refetchAgents()}
+              disabled={isLoadingAgents}
               className="h-9"
             >
-              Refresh
+              {isLoadingAgents ? "Loading..." : "Refresh"}
             </Button>
           </div>
 
           <div className="grid gap-2 pt-4">
-            {agents?.map((a) => (
+            {isLoadingAgents && (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            )}
+            {isErrorAgents && (
+              <div className="text-sm text-destructive p-4 border border-destructive/50 rounded-md bg-destructive/10">
+                <div className="font-medium mb-1">Error loading agents:</div>
+                <div className="text-xs">
+                  {errorAgents instanceof Error
+                    ? errorAgents.message
+                    : "Unknown error"}
+                </div>
+              </div>
+            )}
+            {!isLoadingAgents && !isErrorAgents && agents?.map((a) => (
               <div
                 key={a.id}
                 className="flex items-center justify-between p-3 bg-card border border-border rounded-md text-sm hover:bg-muted/50 transition-colors"
@@ -142,7 +201,7 @@ export default function TestPage() {
                 </Button>
               </div>
             ))}
-            {!agents?.length && (
+            {!isLoadingAgents && !isErrorAgents && !agents?.length && (
               <div className="text-sm text-muted-foreground p-4 text-center border border-dashed border-border rounded-md">
                 No agents found. Create one to get started.
               </div>
@@ -170,7 +229,23 @@ export default function TestPage() {
             </div>
           </div>
 
-          {agent ? (
+          {isLoadingAgent && (
+            <div className="space-y-4">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          )}
+          {isErrorAgent && (
+            <div className="text-sm text-destructive p-4 border border-destructive/50 rounded-md bg-destructive/10">
+              <div className="font-medium mb-1">Error loading agent:</div>
+              <div className="text-xs">
+                {errorAgent instanceof Error
+                  ? errorAgent.message
+                  : "Unknown error"}
+              </div>
+            </div>
+          )}
+          {!isLoadingAgent && !isErrorAgent && agent ? (
             <div className="space-y-6">
               <JsonPre data={agent} />
 
@@ -196,8 +271,9 @@ export default function TestPage() {
                         baseSystemPrompt: newPrompt,
                       })
                     }
+                    disabled={isUpdatingPrompt}
                   >
-                    Save
+                    {isUpdatingPrompt ? "Saving..." : "Save"}
                   </Button>
                 </div>
               </div>
@@ -219,8 +295,9 @@ export default function TestPage() {
                         },
                       })
                     }
+                    disabled={isAddingTool}
                   >
-                    Add Test Tool
+                    {isAddingTool ? "Adding..." : "Add Test Tool"}
                   </Button>
                 </div>
 
@@ -252,8 +329,13 @@ export default function TestPage() {
                               toolId: tool.id,
                             })
                           }
+                          disabled={isTogglingTool}
                         >
-                          {tool.enabled ? "Disable" : "Enable"}
+                          {isTogglingTool
+                            ? "..."
+                            : tool.enabled
+                              ? "Disable"
+                              : "Enable"}
                         </Button>
                         <Button
                           size="sm"
@@ -265,8 +347,9 @@ export default function TestPage() {
                               toolId: tool.id,
                             })
                           }
+                          disabled={isRemovingTool}
                         >
-                          Remove
+                          {isRemovingTool ? "Removing..." : "Remove"}
                         </Button>
                       </div>
                     </div>
@@ -279,11 +362,11 @@ export default function TestPage() {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : !isLoadingAgent && !isErrorAgent ? (
             <div className="text-sm text-muted-foreground italic p-4 border border-dashed border-border rounded-md text-center">
               No agent selected or agent not found.
             </div>
-          )}
+          ) : null}
         </Section>
 
         {/* --- CHATS LIST & CREATION --- */}
@@ -309,43 +392,94 @@ export default function TestPage() {
               onClick={() =>
                 createChat(chatAgentId ? { agentId: Number(chatAgentId) } : {})
               }
+              disabled={isCreatingChat}
               className="h-9"
             >
-              Create Chat
+              {isCreatingChat ? "Creating..." : "Create Chat"}
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => refetchChats()}
+              disabled={isLoadingChats}
               className="h-9"
             >
-              Refresh
+              {isLoadingChats ? "Loading..." : "Refresh"}
             </Button>
           </div>
 
           <div className="grid gap-2 mt-4">
-            {chats?.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center justify-between p-3 bg-card border border-border rounded-md text-sm hover:bg-muted/50 transition-colors"
-              >
-                <span className="text-card-foreground">
-                  Chat {c.id.slice(0, 8)}...{" "}
-                  <span className="text-muted-foreground text-xs ml-2">
-                    ({new Date(c.createdAt).toLocaleTimeString()})
-                  </span>
-                </span>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-7 text-xs"
-                  onClick={() => setActiveChatId(c.id)}
-                >
-                  Open
-                </Button>
+            {isLoadingChats && (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
               </div>
-            ))}
-            {!chats?.length && (
+            )}
+            {isErrorChats && (
+              <div className="text-sm text-destructive p-4 border border-destructive/50 rounded-md bg-destructive/10">
+                <div className="font-medium mb-1">Error loading chats:</div>
+                <div className="text-xs">
+                  {errorChats instanceof Error
+                    ? errorChats.message
+                    : "Unknown error"}
+                </div>
+              </div>
+            )}
+            {!isLoadingChats && !isErrorChats && chats?.map((c) => {
+              const associatedAgent = agents?.find((a) => a.id === c.agentId?.toString());
+              return (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between p-3 bg-card border border-border rounded-md text-sm hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="text-card-foreground">
+                      Chat {c.id.slice(0, 8)}...{" "}
+                      <span className="text-muted-foreground text-xs ml-2">
+                        ({new Date(c.createdAt).toLocaleTimeString()})
+                      </span>
+                    </span>
+                    {c.agentId ? (
+                      <span className="text-xs text-muted-foreground">
+                        Agent: {associatedAgent?.name || `ID: ${c.agentId}`}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-yellow-600 dark:text-yellow-500">
+                        ⚠️ No agent associated
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {!c.agentId && selectedAgentId && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={() =>
+                          updateChatAgent({
+                            chatId: c.id,
+                            agentId: Number(selectedAgentId),
+                          })
+                        }
+                        disabled={isUpdatingChatAgent}
+                      >
+                        {isUpdatingChatAgent ? "..." : "Link Agent"}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-7 text-xs"
+                      onClick={() => setActiveChatId(c.id)}
+                    >
+                      Open
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+            {!isLoadingChats && !isErrorChats && !chats?.length && (
               <div className="text-sm text-muted-foreground p-4 text-center border border-dashed border-border rounded-md">
                 No chats found.
               </div>
@@ -373,13 +507,69 @@ export default function TestPage() {
 
           {activeChatId ? (
             <div className="border border-border rounded-lg bg-card overflow-hidden">
+              {(() => {
+                const activeChat = chats?.find((c) => c.id === activeChatId);
+                const hasAgent = activeChat?.agentId != null;
+                return !hasAgent ? (
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800">
+                    <div className="flex items-start gap-2">
+                      <span className="text-yellow-600 dark:text-yellow-500 text-sm font-medium">
+                        ⚠️ Warning:
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                          This chat has no associated agent. You cannot send messages until an agent is linked.
+                        </p>
+                        {selectedAgentId && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-2 h-7 text-xs"
+                            onClick={() =>
+                              updateChatAgent({
+                                chatId: activeChatId,
+                                agentId: Number(selectedAgentId),
+                              })
+                            }
+                            disabled={isUpdatingChatAgent}
+                          >
+                            {isUpdatingChatAgent
+                              ? "Linking..."
+                              : `Link Selected Agent (${agents?.find((a) => a.id === selectedAgentId)?.name || selectedAgentId})`}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : null;
+              })()}
               <div className="h-[300px] overflow-y-auto p-4 space-y-4 bg-muted/30">
-                {history?.length === 0 && (
+                {isLoadingHistory && (
+                  <div className="space-y-4">
+                    <div className="flex justify-end">
+                      <Skeleton className="h-12 w-48" />
+                    </div>
+                    <div className="flex justify-start">
+                      <Skeleton className="h-12 w-48" />
+                    </div>
+                  </div>
+                )}
+                {isErrorHistory && (
+                  <div className="text-sm text-destructive p-4 border border-destructive/50 rounded-md bg-destructive/10">
+                    <div className="font-medium mb-1">Error loading messages:</div>
+                    <div className="text-xs">
+                      {errorHistory instanceof Error
+                        ? errorHistory.message
+                        : "Unknown error"}
+                    </div>
+                  </div>
+                )}
+                {!isLoadingHistory && !isErrorHistory && history?.length === 0 && (
                   <div className="text-center text-muted-foreground text-xs py-8">
                     No messages yet. Start the conversation.
                   </div>
                 )}
-                {history?.map((msg) => (
+                {!isLoadingHistory && !isErrorHistory && history?.map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex flex-col max-w-[80%] ${
@@ -405,26 +595,47 @@ export default function TestPage() {
               </div>
 
               <div className="p-4 border-t border-border bg-card flex gap-2">
-                <Input
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      sendMessage({ chatId: activeChatId, content: message });
-                      setMessage("");
-                    }
-                  }}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-background"
-                />
-                <Button
-                  onClick={() => {
-                    sendMessage({ chatId: activeChatId, content: message });
-                    setMessage("");
-                  }}
-                >
-                  Send
-                </Button>
+                {(() => {
+                  const activeChat = chats?.find((c) => c.id === activeChatId);
+                  const hasAgent = activeChat?.agentId != null;
+                  return (
+                    <>
+                      <Input
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (
+                            e.key === "Enter" &&
+                            !isSendingMessage &&
+                            message.trim() &&
+                            hasAgent
+                          ) {
+                            sendMessage({ chatId: activeChatId, content: message });
+                            setMessage("");
+                          }
+                        }}
+                        placeholder={
+                          hasAgent
+                            ? "Type a message..."
+                            : "Associate an agent first..."
+                        }
+                        className="flex-1 bg-background"
+                        disabled={isSendingMessage || !hasAgent}
+                      />
+                      <Button
+                        onClick={() => {
+                          if (!isSendingMessage && message.trim() && hasAgent) {
+                            sendMessage({ chatId: activeChatId, content: message });
+                            setMessage("");
+                          }
+                        }}
+                        disabled={isSendingMessage || !message.trim() || !hasAgent}
+                      >
+                        {isSendingMessage ? "Sending..." : "Send"}
+                      </Button>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           ) : (
