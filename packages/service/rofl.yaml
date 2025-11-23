@@ -38,6 +38,19 @@ deployments:
         - any: {}
       fees: endorsing_node
       max_expiration: 3
+    secrets:
+      - name: GROQ_API_KEY
+        value: pGJwa1ggu1/kMmmtl3vwIO85J6/9SgdTudahadrRbs3/yMseZiVkbmFtZVgcP5lvNSoHmLADK7nEqiYg1jm2/2wXaNCN/ngGHWVub25jZU+CzhHWfWJHJw2B03xBrkVldmFsdWVYSF6hrZv1QgLy/mHaV4PD6YxsFl6Bwhf7B4Nwe/U/YY/xMWS1Wlr/WqAmV3sTCUP5KW3xpaWA8yjhdKjx150gAZjix4YPtxEH0w==
+      - name: PG_URI
+        value: pGJwa1ggi2/OfnN73cDlmuE8+jcHfJeftJ1WC4qLHFOHSjxgjD9kbmFtZVZhgHHq2jw5IjcQB7JxhPD58LjigYXaZW5vbmNlT7fZZ7gjbHxZpLKhxouZfGV2YWx1ZVikgXvNdrwSvThGoHJ5rOOiA4ZwSeqbFmZFyccjHByTVQFBvdF7SzRH3ZN4eEjqLofL5JhPTfWxpPmtgjnXrqG9hMEyti/TNkWpbFiOVQXkIno47PaubO6AArYyNcFDDvtgCVLqWmsYOEEDVTKNiL8AJIu3Jy4ZnujDuFr+G/pCFLJObWvGZcjzc74/+q+pp+AVv6wCGGN74cLhBe4r2CCisoOHkPQ=
+      - name: EVM_PRIVATE_KEY_SYNAPSE
+        value: pGJwa1ggyasbHd8Ry7D7mBcRIpznCc/Q+SG+StgEkTKQB5BTXXBkbmFtZVgnsW487qDjHivOk3Jgf87PmfdYhGWFWBDuYfM+cuyia1lLEDTCgxOuZW5vbmNlTxiyaogninbJruPRXPXmHGV2YWx1ZVhSfGhbIaV8X5ROU35QhymwU4IGsilV9DeKFNbiCSa7Ut7doudAh3fHhKulV4QrzFOkykkaxrZOxAqJIXmNsn2iMl1MyRUCj240tBJlb1V/o9guvQ==
+      - name: GEMINI_API_KEY
+        value: pGJwa1gg13dq/du8SKjkGdNHpnTYhD1M16uoKQvYAQLUsd5UHSFkbmFtZVge6jG5/sL0Z2Jgm0VExv6HP0T8e1zmYkCklHpg5mVxZW5vbmNlTzAW6AUNSojw4LtDpY6mHmV2YWx1ZVg3X3FREI8j8ACXESOWnKkOGO46mKc3WeKEqqLS21+3mDxPD/4ZTgGNyGaF6rhhlYVEVqWLBkPTWw==
+      - name: ALCHEMY_API_KEY
+        value: pGJwa1ggJ28lX41sniHmYTPea405kfOmDU6sre4vEREtKONbd0NkbmFtZVgf00Jbh/840AvzB5lSY3sfeZXaZyO2HlhfzGAsNa+uIGVub25jZU/gnOezIbC9NQ3AFQYJymxldmFsdWVYJQY/NajqDn4OSyhP4Pq0uo64ppos9LqDXjexQzMTVO0NuE4upms=
+      - name: EVM_MCP_SERVER_URL
+        value: pGJwa1gg+x/bDI9ERzzJ6JyPELZJ8B4AyrDsO2PhTDoNNHgukGNkbmFtZVgifTCMBW30n5AM5zPC0zGboGz38DXc3gksYAQU5kbPFB1dpGVub25jZU8/CECsOs5FmwzB2kfkYFlldmFsdWVYQKQONlq67RBTYGd8YS8yg/4HY21Ku7THXjySDPqXzv0Uwcz4VUm4JLTB/uGUv89lmbj8p57ce7Tu8Z1Ch0Taqpk=
     machines:
       default:
         provider: oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz
