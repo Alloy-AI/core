@@ -23,6 +23,8 @@ export const agents = pgTable(
     registrationPieceCid: varchar("registration_piece_cid", {
       length: 255,
     }).notNull(),
+    ens: varchar("ens", { length: 255 }),
+    imageUrl: varchar("image_url", { length: 500 }).notNull(),
     baseSystemPrompt: text("base_system_prompt").notNull(),
     knowledgeBases: jsonb("knowledge_bases").$defaultFn(() => []),
     tools: jsonb("tools").$defaultFn(() => []),
