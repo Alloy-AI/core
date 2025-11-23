@@ -4,7 +4,7 @@ import db from "../db/client";
 import schema from "../db/schema";
 import type { AgentDescriptor } from "../types/agent";
 import { Agent } from "./Agent";
-import { AgentCardSchema } from "./zod";
+import { AgentCardSchema, CreateAgentCardSchema, UpdateAgentCardSchema } from "./zod";
 
 // Types & Schemas
 export type TaskState =
@@ -501,6 +501,137 @@ export async function handleJsonRpc(
   response.id = id;
 
   return response;
+}
+
+// AgentCard Management Functions
+export async function createAgentCard(args: {
+  agentId: string;
+  card: z.infer<typeof AgentCardSchema>;
+}) {
+  // Validate the card data
+  const validatedCard = AgentCardSchema.parse(args.card);
+
+  // Check if agent exists
+  const [agent] = await db
+    .select()
+    .from(schema.agents)
+    .where(eq(schema.agents.id, Number(args.agentId)))
+    .limit(1);
+
+  if (!agent) {
+    throw new Error(`Agent with ID ${args.agentId} not found`);
+  }
+
+  // Check if agent card already exists for this agent
+  const existingCard = await getAgentCard({ agentId: args.agentId });
+  if (existingCard) {
+    throw new Error(`Agent card already exists for agent ${args.agentId}`);
+  }
+
+  // Insert agent card
+  const [newCard] = await db
+    .insert(schema.agentCards)
+    .values({
+      agentId: Number(args.agentId),
+      humanReadableId: validatedCard.humanReadableId,
+      schemaVersion: validatedCard.schemaVersion,
+      agentVersion: validatedCard.agentVersion,
+      name: validatedCard.name,
+      description: validatedCard.description,
+      url: validatedCard.url,
+      provider: validatedCard.provider,
+      capabilities: validatedCard.capabilities,
+      authSchemes: validatedCard.authSchemes,
+      skills: validatedCard.skills || [],
+      tags: validatedCard.tags || [],
+      iconUrl: validatedCard.iconUrl || null,
+    })
+    .returning();
+
+  return getAgentCard({ id: newCard.id.toString() });
+}
+
+export async function updateAgentCard(args: {
+  id?: string;
+  agentId?: string;
+  humanReadableId?: string;
+  updates: Partial<z.infer<typeof AgentCardSchema>>;
+}) {
+  // Find the card to update
+  const conditions = [];
+  if (args.id) {
+    conditions.push(eq(schema.agentCards.id, Number(args.id)));
+  }
+  if (args.agentId) {
+    conditions.push(eq(schema.agentCards.agentId, Number(args.agentId)));
+  }
+  if (args.humanReadableId) {
+    conditions.push(eq(schema.agentCards.humanReadableId, args.humanReadableId));
+  }
+
+  if (conditions.length === 0) {
+    throw new Error("Must provide id, agentId, or humanReadableId to update");
+  }
+
+  const [existingCard] = await db
+    .select()
+    .from(schema.agentCards)
+    .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+    .limit(1);
+
+  if (!existingCard) {
+    throw new Error("Agent card not found");
+  }
+
+  // Validate updates if provided
+  const updateData: any = {};
+  if (args.updates.schemaVersion !== undefined) {
+    updateData.schemaVersion = args.updates.schemaVersion;
+  }
+  if (args.updates.humanReadableId !== undefined) {
+    updateData.humanReadableId = args.updates.humanReadableId;
+  }
+  if (args.updates.agentVersion !== undefined) {
+    updateData.agentVersion = args.updates.agentVersion;
+  }
+  if (args.updates.name !== undefined) {
+    updateData.name = args.updates.name;
+  }
+  if (args.updates.description !== undefined) {
+    updateData.description = args.updates.description;
+  }
+  if (args.updates.url !== undefined) {
+    updateData.url = args.updates.url;
+  }
+  if (args.updates.provider !== undefined) {
+    updateData.provider = args.updates.provider;
+  }
+  if (args.updates.capabilities !== undefined) {
+    updateData.capabilities = args.updates.capabilities;
+  }
+  if (args.updates.authSchemes !== undefined) {
+    updateData.authSchemes = args.updates.authSchemes;
+  }
+  if (args.updates.skills !== undefined) {
+    updateData.skills = args.updates.skills;
+  }
+  if (args.updates.tags !== undefined) {
+    updateData.tags = args.updates.tags;
+  }
+  if (args.updates.iconUrl !== undefined) {
+    updateData.iconUrl = args.updates.iconUrl || null;
+  }
+
+  // Update the card
+  await db
+    .update(schema.agentCards)
+    .set({
+      ...updateData,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.agentCards.id, existingCard.id));
+
+  return getAgentCard({ id: existingCard.id.toString() });
 }
 
 // AgentCard Endpoint Helper
