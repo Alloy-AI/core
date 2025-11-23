@@ -17,6 +17,18 @@ import { getAgentCard } from "../lib/a2a";
 import db from "../db/client";
 import schema from "../db/schema";
 import { eq } from "drizzle-orm";
+import NameStone from "@namestone/namestone-sdk";
+import { env } from "../env";
+
+const slugify = (str: string) => {
+  return str
+    .toLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/^-+|-+$/g, "");
+};
+
+const ns = new NameStone(env.NAMESTONE_API_KEY);
 
 const app = new Hono();
 
@@ -132,10 +144,53 @@ app.post("/", authenticated, async (c) => {
       endpoint: `eip155:${chainId}:${c.get("userWallet")}`,
     });
   }
+
+  let subdomain = slugify(opts.name);
+
+  while (true) {
+    try {
+      console.log("Searching for domain", subdomain);
+      const domainData = await ns.searchNames({
+        domain: env.ENS_DOMAIN,
+        name: subdomain,
+      });
+
+      if (
+        domainData.filter(
+          (d) => d.name.toLowerCase() === subdomain.toLowerCase(),
+        ).length === 0
+      ) {
+        break;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    subdomain = `${subdomain}-${Bun.randomUUIDv7().slice(0, 4)}`;
+  }
+
+  await ns.setName({
+    domain: env.ENS_DOMAIN,
+    name: subdomain,
+    address: agentAddress,
+    text_records: {
+      avatar: filecoinUrl,
+      description: opts.description,
+      website: "alloy.ai",
+      location: "World Alloy",
+    },
+  });
+
+  const domain = `${subdomain}.${env.ENS_DOMAIN}`;
+
   const endpoints: AgentDescriptor["registration"]["endpoints"] = [
     {
       name: "A2A",
       endpoint: `${url.protocol}//${url.host}/agents/${agentAddress}/.well-known/agent-card.json`,
+    },
+    {
+      name: "ENS",
+      endpoint: `eip155:1:${domain}`,
     },
     ...addresses,
   ];

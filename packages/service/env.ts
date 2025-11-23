@@ -18,6 +18,8 @@ export const env = z
     GEMINI_API_KEY: z.string(),
     ALCHEMY_API_KEY: z.string(),
     EVM_MCP_SERVER_URL: z.string(),
+    NAMESTONE_API_KEY: z.string(),
+    ENS_DOMAIN: z.string(),
   })
   .parse(envRaw);
 
