@@ -8,6 +8,7 @@ export type AgentDescriptor = {
   id: string;
 
   model: string;
+  keySeed: string;
 
   registrationPieceCid: string;
   registration: {
@@ -48,7 +49,7 @@ export type AgentDescriptor = {
   }[];
 };
 
-type EIP155Address = `eip155:${number}:${Address}`;
+export type EIP155Address = `eip155:${number}:${Address}`;
 
 type ERC8004Registration = {
   agentId: number;

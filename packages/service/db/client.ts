@@ -17,6 +17,7 @@ type AgentData = {
   name: string;
   description: string;
   model: string;
+  keySeed:string;
   registrationPieceCid: string;
   baseSystemPrompt: string;
   knowledgeBases: any[];
